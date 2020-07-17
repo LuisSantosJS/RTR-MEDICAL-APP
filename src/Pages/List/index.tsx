@@ -9,8 +9,6 @@ import {
     Text,
     Animated,
     Dimensions,
-    StyleSheet,
-    ScrollView,
     TouchableWithoutFeedback
 } from 'react-native';
 import { Modalize } from 'react-native-modalize';
@@ -23,7 +21,7 @@ import Toast from 'react-native-simple-toast';
 import Modal from 'react-native-modal';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import auth from '@react-native-firebase/auth';
-import { useNavigation, DrawerActions } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import Dialog from "react-native-dialog";
 import GestureRecognizer from 'react-native-swipe-gestures';
 import { getStatusBarHeight } from 'react-native-status-bar-height';
@@ -55,7 +53,7 @@ const List: React.FC = () => {
     const { list } = useList();
     const [isVisibleModal3, setISVisibleModal3] = useState<boolean>(false);
     const [loading, setLoading] = useState<boolean>(false);
-    const [okIOS, setOkIOS] = useState(false);
+    const [okIOS, setOkIOS] = useState<boolean>(false);
     const [title, setTitle] = useState<string>('');
     const [description, setDescription] = useState<string>('');
     var mark: any = {};
@@ -64,14 +62,45 @@ const List: React.FC = () => {
     const [show, setShow] = useState<boolean>(false);
     const [showIOS, setShowIOS] = useState<boolean>(false);
     const [ItemDelete, setItemDelete] = useState<LIST>();
+    const [ItemView, setItemView] = useState<LIST>();
     const [isVisibleModalDelete, setISVisibleModalDelete] = useState<boolean>(false);
+    const [isVisibleModalMAIS, setISVisibleModalMAIS] = useState<boolean>(false);
+    const [searchText, setSearchText] = useState<string>('');
 
 
+    const detectMultiValues = (date: string) => {
+
+        var red: number = 0;
+        var green: number = 0;
+        var orange: number = 0;
+        list.forEach(res => {
+            if (res.dates === date) {
+                if (res.status === 'red') {
+                    red++;
+                } if (res.status === 'green') {
+                    green++;
+                } if (res.status === 'orange') {
+                    orange++;
+                }
+            }
+        });
+
+        if (red !== 0) {
+            return '#800080';
+        }
+        if (orange !== 0) {
+            return 'orange';
+        }
+        if ((green !== 0) && (orange === 0) && (red === 0)) {
+            return 'green';
+        }
+    }
 
 
     function loadDaysAgend() {
-        list.reverse().forEach(res => {
-            mark[res.dates] = { selected: true, selectedColor: res.status };
+        list.forEach(res => {
+            const cor = detectMultiValues(res.dates);
+            mark[res.dates] = { selected: true, selectedColor: cor };
         });
     }
 
@@ -79,8 +108,6 @@ const List: React.FC = () => {
     useEffect(() => {
         loadDaysAgend();
     }, [mark]);
-
-
     const modalizeRef = useRef<Modalize>(null);
     const onOpen = () => {
         modalizeRef.current?.open();
@@ -175,12 +202,13 @@ const List: React.FC = () => {
             id: ID,
             date: Platform.OS == 'ios' ? dateIOS : date,
             name: nameUser,
-            email: emailUser,
+            email: emailUser.toLowerCase(),
             statusText: 'Pendiente',
             title: title,
             numberStatus: 1,
             description: description,
             timestamp: firestore.Timestamp.now().toMillis(),
+            timestampTarea: moment(Platform.OS === 'ios' ? dateIOS : date).format('x'),
             status: 'orange',
             dates: moment(Platform.OS == 'ios' ? dateIOS : date).format('YYYY-MM-DD')
         }
@@ -204,12 +232,16 @@ const List: React.FC = () => {
 
 
 
-    function updateTarefa(number: number, item: string) {
-        if (number == 0) {
-            return firestore().collection('list').doc(`${item}`).update({
-                statusText: 'Concluido',
+    function updateTarefa(number: number, item: LIST) {
+        if (item.email.toLowerCase() !== emailUser.toLowerCase()) {
+            return Toast.showWithGravity('No puede cambiar el estado de esta tarea', Toast.LONG, Toast.TOP)
+        }
+        if (number == 2) {
+            return firestore().collection('list').doc(`${item.id}`).update({
+                statusText: 'Finalizado',
                 status: 'green',
-                numberStatus: 0,
+                numberStatus: 2,
+
 
             }).then(() => {
                 Toast.showWithGravity('Estado cambiado', Toast.LONG, Toast.TOP)
@@ -218,7 +250,7 @@ const List: React.FC = () => {
             })
         }
         if (number == 1) {
-            return firestore().collection('list').doc(`${item}`).update({
+            return firestore().collection('list').doc(`${item.id}`).update({
                 statusText: 'Pendiente',
                 numberStatus: 1,
                 status: 'orange'
@@ -228,10 +260,10 @@ const List: React.FC = () => {
                 Toast.showWithGravity('Se produjo un error al actualizar', Toast.LONG, Toast.TOP)
             })
         }
-        if (number == 2) {
-            return firestore().collection('list').doc(`${item}`).update({
-                statusText: 'No Hecho',
-                numberStatus: 2,
+        if (number == 0) {
+            return firestore().collection('list').doc(`${item.id}`).update({
+                statusText: 'Cancelado',
+                numberStatus: 0,
                 status: 'red'
             }).then(() => {
                 Toast.showWithGravity('Estado cambiado', Toast.LONG, Toast.TOP)
@@ -243,6 +275,9 @@ const List: React.FC = () => {
     }
 
     function deleteListItem(item: LIST) {
+        if (item.email.toLowerCase() !== emailUser.toLowerCase()) {
+            return Toast.showWithGravity('No tienes autorización para eliminar esta tarea', Toast.LONG, Toast.TOP)
+        }
         setItemDelete(item);
         setISVisibleModalDelete(true);
     }
@@ -262,6 +297,12 @@ const List: React.FC = () => {
         directionalOffsetThreshold: 50
     };
 
+    function visibleMais(item: LIST) {
+        setItemView(item);
+        setISVisibleModalMAIS(true);
+    }
+
+
 
     function RenderItems(item: LIST) {
 
@@ -272,42 +313,43 @@ const List: React.FC = () => {
                     <GestureRecognizer
                         onSwipeRight={() => deleteListItem(item)}
                         config={configSWIPE}>
-                        <View style={[styles.itemContain]}>
-                            <View style={[styles.borderColorStatus, { backgroundColor: item.status }]} />
-                            <View style={styles.bodyContainerItem}>
-                                <View style={styles.containerEmail}>
-                                    <Text numberOfLines={1} style={[styles.textEmail]}>{item.email.toLowerCase()}</Text>
+                        <TouchableWithoutFeedback onPress={() => visibleMais(item)}>
+                            <View style={[styles.itemContain]}>
+                                <View style={[styles.borderColorStatus, { backgroundColor: item.status }]} />
+                                <View style={styles.bodyContainerItem}>
+                                    <View style={styles.containerEmail}>
+                                        <Text numberOfLines={1} style={[styles.textEmail]}>{item.email.toLowerCase()}</Text>
+                                    </View>
+                                    <View style={styles.containerName}>
+                                        <Text numberOfLines={1} style={styles.textName}>{item.title}</Text>
+                                    </View>
+                                    <View style={styles.containerDescrip}>
+                                        <Text
+                                            numberOfLines={Number(item.description.length <= 35 ? 1 : 2)}
+                                            style={styles.textDesc}>
+                                            {item.description}
+                                        </Text>
+                                    </View>
                                 </View>
-                                <View style={styles.containerName}>
-                                    <Text style={styles.textName}>{item.title}</Text>
-                                </View>
-                                <View style={styles.containerDescrip}>
-                                    <Text
-                                        numberOfLines={Number(item.description.length <= 35 ? 1 : 2)}
-                                        style={styles.textDesc}>
-                                        {item.description}
-                                    </Text>
+                                <Animated.View style={[styles.viewOpcacityItem]} >
+                                    <Text style={styles.textEmail}>{item.dates}</Text>
+                                    <SwitchSelector
+                                        options={[
+                                            { label: "C", value: "0", activeColor: 'red' },
+                                            { label: "P", value: "1", activeColor: 'orange' },
+                                            { label: "F", value: "2", activeColor: 'green' },
 
+                                        ]}
+                                        disabled={item.email.toLowerCase() !== emailUser.toLowerCase() ? true : enabledStatesItems}
+                                        buttonColor={item.status}
+                                        initial={Number(item.numberStatus)}
+                                        onPress={(value: number) => updateTarefa(value, item)}
 
-                                </View>
+                                    />
+                                    <Text style={styles.textEmail}>{item.statusText}</Text>
+                                </Animated.View>
                             </View>
-                            <Animated.View style={[styles.viewOpcacityItem]} >
-                                <Text style={styles.textEmail}>{item.dates}</Text>
-                                <SwitchSelector
-                                    options={[
-                                        { label: "C", value: "0", activeColor: 'green' },
-                                        { label: "P", value: "1", activeColor: 'orange' },
-                                        { label: "N", value: "2", activeColor: 'red' }
-                                    ]}
-                                    disabled={enabledStatesItems}
-                                    buttonColor={item.status}
-                                    initial={Number(item.numberStatus)}
-                                    onPress={(value: number) => updateTarefa(value, String(item.id))}
-
-                                />
-                                <Text style={styles.textEmail}>{item.statusText}</Text>
-                            </Animated.View>
-                        </View>
+                        </TouchableWithoutFeedback>
                     </GestureRecognizer>
                 </View>
                 <View style={styles.separator} />
@@ -316,7 +358,7 @@ const List: React.FC = () => {
     }
     return (
         <>
-            <View style={{ backgroundColor: 'grey', width: '100%', height: getStatusBarHeight(true) }} />
+            <View style={{ backgroundColor: '#141414', width: '100%', height: getStatusBarHeight(true) }} />
             <View style={[styles.header, emailUser.toLowerCase() !== 'medicalrtr@gmail.com' && { paddingLeft: width * 0.05, }]}>
                 {emailUser.toLowerCase() == 'medicalrtr@gmail.com' && <TouchableOpacity style={styles.ViewIconHeader} onPress={() => navigation.navigate('Users')} >
                     <Image resizeMode={"contain"} style={styles.iconHeader} source={require('../../assets/team.png')} />
@@ -326,12 +368,32 @@ const List: React.FC = () => {
                     <Image resizeMode={"contain"} style={styles.iconHeader} source={require('../../assets/salir.png')} />
                 </TouchableOpacity>
             </View>
+            <View style={styles.containerSearch}>
+                <View style={styles.containerItemSearch}>
+                    <View style={styles.searchInput}>
+                        <TextInput
+                            placeholder={'Buscar...'}
+                            value={searchText}
+                            onChangeText={(e) => setSearchText(e)}
+                        />
+                    </View>
+
+                    <View style={styles.iconSearch}>
+                        {searchText.length === 0 ?
+                            <Image resizeMode={"contain"} style={{ height: '60%', width: '40%' }} source={require('../../assets/search.png')} /> :
+                            <TouchableWithoutFeedback onPress={() => setSearchText('')}>
+                                <Image resizeMode={"contain"} style={{ height: '35%', width: '25%' }} source={require('../../assets/close.png')} />
+                            </TouchableWithoutFeedback>
+                        }
+                    </View>
+                </View>
+
+            </View>
 
             <FlatList
                 style={{ flex: 1, backgroundColor: '#E5E5E5' }}
-                data={list}
+                data={searchText.length !== 0 ? list.filter(res => (res.title.toLowerCase().search(searchText.toLowerCase()) >= 0) || (res.description.toLowerCase().search(searchText.toLowerCase()) >= 0) || (res.dates.toLowerCase().search(searchText.toLowerCase()) >= 0) || (res.email.toLowerCase().search(searchText.toLowerCase()) >= 0) || (res.name.toLowerCase().search(searchText.toLowerCase()) >= 0) || (res.statusText.toLowerCase().search(searchText.toLowerCase()) >= 0)) : list}
                 showsVerticalScrollIndicator={false}
-                ListHeaderComponent={() => <View style={styles.separator} />}
                 ListFooterComponent={() => <View style={{ height: width * 0.5, width: '100%' }} />}
                 renderItem={({ item }) => RenderItems(item)}
                 keyExtractor={(item: LIST) => String(item.id)}
@@ -378,7 +440,7 @@ const List: React.FC = () => {
                         <TextInput
                             style={styles.inputAddTitle}
                             placeholder={'Título'}
-                            maxLength={18}
+                            maxLength={150}
                             value={title}
                             onChangeText={(e) => setTitle(e)}
                         />
@@ -386,7 +448,7 @@ const List: React.FC = () => {
                             style={styles.inputAddDesc}
                             placeholder={'Descripción'}
                             multiline={true}
-                            maxLength={65}
+                            maxLength={1000}
                             value={description}
                             onChangeText={(e) => setDescription(e)}
                         />
@@ -434,14 +496,15 @@ const List: React.FC = () => {
                                 <Text style={styles.textEmail}>{ItemDelete?.dates}</Text>
                                 <SwitchSelector
                                     options={[
-                                        { label: "C", value: "0", activeColor: 'green' },
+                                        { label: "C", value: "0", activeColor: 'red' },
                                         { label: "P", value: "1", activeColor: 'orange' },
-                                        { label: "N", value: "2", activeColor: 'red' }
+                                        { label: "F", value: "2", activeColor: 'green' },
+
                                     ]}
                                     disabled={true}
                                     buttonColor={ItemDelete?.status}
                                     initial={Number(ItemDelete?.numberStatus)}
-                                    onPress={(value: number) => updateTarefa(value, String(ItemDelete?.id))}
+                                    onPress={() => { }}
 
                                 />
                                 <Text style={styles.textEmail}>{ItemDelete?.statusText}</Text>
@@ -501,6 +564,71 @@ const List: React.FC = () => {
                     pagingEnabled
                 />
             </Modalize>
+
+
+            <Modal
+                swipeDirection={Platform.OS === 'ios' ? 'down' : 'left'}
+                customBackdrop={
+                    <TouchableWithoutFeedback onPress={() => setISVisibleModalMAIS(false)}>
+                        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.8)' }} />
+                    </TouchableWithoutFeedback>
+                }
+                isVisible={isVisibleModalMAIS}
+                onBackButtonPress={() => setISVisibleModalMAIS(false)}
+                onSwipeComplete={() => setISVisibleModalMAIS(false)}>
+                <View style={styles.conatainerModalMAIS}>
+                    <View style={[styles.containerModalMAIS, { top: getStatusBarHeight(true) }]} >
+                        <View style={[styles.itemContainView]}>
+                            <View style={[styles.borderColorStatusView, { backgroundColor: ItemView?.status }]} />
+                            <View style={styles.bodyContainerItemView}>
+                                <View style={styles.containerEmail}>
+                                    <Text numberOfLines={2} style={[styles.textEmail2]}>{ItemView?.email.toLowerCase()}</Text>
+                                </View>
+                                <View style={styles.containerName}>
+                                    <TextInput
+                                        style={[styles.textName2]}
+                                        multiline={true}
+
+                                        editable={Platform.OS === 'ios' ? false : true}
+                                        textAlignVertical='top'
+                                        value={ItemView?.title}
+                                        onChangeText={() => { }}
+                                    />
+                                </View>
+                                <View style={styles.containerDescrip}>
+                                    <TextInput
+                                        style={[styles.textDesc2]}
+                                        multiline={true}
+                                    
+
+                                        textAlignVertical='top'
+                                        editable={Platform.OS === 'ios' ? false : true}
+                                        onChangeText={() => { }}
+                                        value={ItemView?.description}
+                                    />
+                                </View>
+                            </View>
+                            <Animated.View style={[styles.viewOpcacityItem]} >
+                                <Text numberOfLines={2} style={styles.textEmail2}>{ItemView?.dates}</Text>
+                                <SwitchSelector
+                                    options={[
+                                        { label: "C", value: "0", activeColor: 'red' },
+                                        { label: "P", value: "1", activeColor: 'orange' },
+                                        { label: "F", value: "2", activeColor: 'green' },
+                                    ]}
+                                    disabled={true}
+                                    buttonColor={ItemView?.status}
+                                    initial={Number(ItemView?.numberStatus)}
+                                    onPress={() => { }}
+
+                                />
+                                <Text numberOfLines={2} style={styles.textEmail2}>{ItemView?.statusText}</Text>
+                            </Animated.View>
+                        </View>
+
+                    </View>
+                </View>
+            </Modal>
 
         </>
     );

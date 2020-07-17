@@ -8,7 +8,7 @@ const styles = StyleSheet.create({
         flex: 1,
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: '#f0f0f5'
+        backgroundColor: '#E5E5E5'
     },
     item: {
         backgroundColor: 'white',
@@ -18,10 +18,51 @@ const styles = StyleSheet.create({
         marginRight: 10,
         marginTop: 17
     },
+    containerSearch:{
+        width:'100%',
+        height: width*0.2,
+        justifyContent:'center',
+        alignItems:'center',
+        backgroundColor:'#E5E5E5'
+
+    },
+    iconSearch:{
+        height:'100%',
+        width: '20%',
+        justifyContent:'center',
+        alignItems:'center',
+    },
+    searchInput:{
+        height:'100%',
+        width: '80%',
+        paddingHorizontal: width*0.04,
+        justifyContent:'flex-start',
+        flexDirection: 'row',
+        alignItems:'center',
+    },
+    containerItemSearch:{
+        width: '90%',
+        height:'65%',
+        backgroundColor:'white',
+        elevation: 2,
+        borderRadius: width*0.02,
+        shadowOffset: { width: 5, height: 5 },
+        shadowColor: "black",
+        shadowOpacity: 0.4,
+        shadowRadius: 10,
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        flexDirection:'row'
+    },
     conatainerModal3: {
         flex: 1,
         alignItems: 'center',
         justifyContent: 'flex-start',
+    },
+    conatainerModalMAIS: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     emptyDate: {
         height: 15,
@@ -47,7 +88,7 @@ const styles = StyleSheet.create({
     header: {
         width: width,
         height: width * 0.15,
-        backgroundColor: 'grey',
+        backgroundColor: '#141414',
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
@@ -98,6 +139,14 @@ const styles = StyleSheet.create({
         alignItems: 'center'
     },
     containerModalDel: {
+        width: width * 0.9,
+        height: width * 0.6,
+        borderRadius: ((width * 0.1) / 2),
+        backgroundColor: '#e5e5e5',
+        justifyContent: 'space-evenly',
+        alignItems: 'center'
+    },
+    containerModalMAIS: {
         width: width * 0.9,
         height: width * 0.6,
         borderRadius: ((width * 0.1) / 2),
@@ -184,6 +233,33 @@ const styles = StyleSheet.create({
         alignItems: 'flex-start',
         paddingHorizontal: width * 0.02
     },
+    itemContainView: {
+        width: '90%',
+        height: width * 0.6,
+        borderRadius: width * 0.03,
+        backgroundColor: 'white',
+        elevation: 5,
+        shadowOffset: { width: 5, height: 5 },
+        shadowColor: "black",
+        shadowOpacity: 0.4,
+        shadowRadius: 10,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between'
+    },
+    borderColorStatusView: {
+        width: '5%',
+        height: '100%',
+        borderTopLeftRadius: width * 0.03,
+        borderBottomLeftRadius: width * 0.03
+    },
+    bodyContainerItemView: {
+        width: '65%',
+        height: width * 0.6,
+        justifyContent: 'space-between',
+        alignItems: 'flex-start',
+        paddingHorizontal: width * 0.02
+    },
     buttomList: {
         height: width * 0.15,
         width: width * 0.15,
@@ -207,8 +283,22 @@ const styles = StyleSheet.create({
         color: '#141414'
 
     },
+    textEmail2: {
+        fontSize: width * 0.04,
+        fontWeight: '400',
+        textAlign: 'auto',
+        color: '#141414'
+
+    },
     textDesc: {
         fontSize: width * 0.03,
+        fontWeight: '400',
+        textAlign: 'auto',
+        color: '#141414'
+
+    },
+    textDesc2: {
+        fontSize: width * 0.04,
         fontWeight: '400',
         textAlign: 'auto',
         color: '#141414'
@@ -241,6 +331,12 @@ const styles = StyleSheet.create({
     },
     textName: {
         fontSize: width * 0.045,
+        textAlign: 'auto',
+        fontWeight: '400',
+        color: '#141414'
+    },
+    textName2: {
+        fontSize: width * 0.055,
         textAlign: 'auto',
         fontWeight: '400',
         color: '#141414'

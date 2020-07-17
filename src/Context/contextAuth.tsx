@@ -72,8 +72,7 @@ const ProviderAuth: React.FC = ({ children }) => {
     const [emailUser, setEmailUser] = useState<string>('');
     const [list, setList] = useState<LIST[]>([]);
     const [users, setUsers] = useState<USERS[]>([]);
-    const [loadTarea, setLoadTarea] = useState<boolean>(false);
-    const [itemsLength, setItemsLength] = useState<number>(0)
+
 
 
     useEffect(() => { }, [list, nameUser, loading, emailUser, userSaved, users])
@@ -152,8 +151,10 @@ const ProviderAuth: React.FC = ({ children }) => {
             }
         })
     }
+
+
     function loadLists() {
-        firestore().collection('list').orderBy('timestamp', 'desc').onSnapshot(res => {
+        firestore().collection('list').orderBy('timestampTarea', 'desc').onSnapshot(res => {
             setList([]);
             res.docs.forEach((response: any) => {
                 //console.log('tarefas', response.data());
@@ -194,6 +195,8 @@ const ProviderAuth: React.FC = ({ children }) => {
             });
         }
     }, [userSaved]);
+
+
 
     return (
         <ContextApp.Provider value={{

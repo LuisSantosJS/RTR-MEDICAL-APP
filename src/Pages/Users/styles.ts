@@ -8,7 +8,7 @@ const styles = StyleSheet.create({
         flex: 1,
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: '#f0f0f5'
+        backgroundColor: '#E5E5E5'
     },
     item: {
         backgroundColor: 'white',
@@ -30,7 +30,7 @@ const styles = StyleSheet.create({
     header: {
         width: width,
         height: width * 0.15,
-        backgroundColor: 'grey',
+        backgroundColor: '#141414',
         paddingLeft: width*0.05,
         flexDirection: 'row',
         alignItems: 'center',

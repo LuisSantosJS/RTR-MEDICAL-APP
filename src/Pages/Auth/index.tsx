@@ -7,7 +7,8 @@ import {
     TextInput,
     Image,
     Keyboard,
-    ActivityIndicator
+    ActivityIndicator,
+    StatusBar
 } from 'react-native';
 import * as EmailValidator from 'email-validator';
 import styles from './styles';
@@ -98,11 +99,12 @@ const Auth: React.FC = () => {
         <>
 
             <View style={styles.container}>
+                <StatusBar barStyle={'dark-content'} backgroundColor='#E5E5E5'/>
 
                 <View style={styles.containerViewOptions}>
                     <View style={styles.containerLogo}>
 
-                        <Image resizeMode={'contain'} style={styles.logo} source={require('../../assets/icone.png')} />
+                        <Image resizeMode={'contain'} style={styles.logo} source={require('../../assets/icones.png')} />
 
                     </View>
                     <TouchableWithoutFeedback onPress={handleLogin} >

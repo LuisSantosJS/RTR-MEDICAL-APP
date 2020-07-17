@@ -176,7 +176,7 @@ const Users: React.FC = () => {
                         <View style={[styles.borderColorStatus, { backgroundColor: 'blue' }]} />
                         <View style={styles.bodyContainerItem}>
                             <View style={styles.containerEmail}>
-                                <Text numberOfLines={1}  style={[styles.textEmail]}>{item.email}</Text>
+                                <Text numberOfLines={1}  style={[styles.textEmail]}>{item.email.toLowerCase()}</Text>
                             </View>
                             <View style={styles.containerName}>
                                 <Text numberOfLines={1}  style={styles.textName}>{item.name}</Text>
@@ -205,7 +205,7 @@ const Users: React.FC = () => {
 
     return (
         <>
-            <View style={{ backgroundColor: 'grey', width: '100%', height: getStatusBarHeight(true) }} />
+            <View style={{ backgroundColor: '#141414', width: '100%', height: getStatusBarHeight(true) }} />
             <View style={styles.header}>
                 <Text style={styles.textHeader}>Lista de Usuarios</Text>
                 <TouchableOpacity style={styles.ViewIconHeader} onPress={() => setVisibleDialog(true)} >

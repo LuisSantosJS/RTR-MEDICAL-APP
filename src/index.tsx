@@ -14,14 +14,14 @@ const Router: React.FC = () => {
     if (userSaved) {
         return (
             <>
-                <StatusBar barStyle={'light-content'} backgroundColor={'grey'} />
+                <StatusBar barStyle={'light-content'} backgroundColor={'#141414'} />
                 <MainRouter />
             </>
         );
     }
     return (
         <>
-            <StatusBar barStyle={'light-content'} backgroundColor={'grey'} />
+            <StatusBar barStyle={'light-content'} backgroundColor={'#141414'} />
             <AuthRouter />
         </>
     );
