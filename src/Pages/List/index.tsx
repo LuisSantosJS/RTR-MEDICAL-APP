@@ -233,9 +233,7 @@ const List: React.FC = () => {
 
 
     function updateTarefa(number: number, item: LIST) {
-        if (item.email.toLowerCase() !== emailUser.toLowerCase()) {
-            return Toast.showWithGravity('No puede cambiar el estado de esta tarea', Toast.LONG, Toast.TOP)
-        }
+
         if (number == 2) {
             return firestore().collection('list').doc(`${item.id}`).update({
                 statusText: 'Finalizado',
@@ -340,7 +338,7 @@ const List: React.FC = () => {
                                             { label: "F", value: "2", activeColor: 'green' },
 
                                         ]}
-                                        disabled={item.email.toLowerCase() !== emailUser.toLowerCase() ? true : enabledStatesItems}
+                                        disabled={enabledStatesItems}
                                         buttonColor={item.status}
                                         initial={Number(item.numberStatus)}
                                         onPress={(value: number) => updateTarefa(value, item)}
@@ -599,7 +597,7 @@ const List: React.FC = () => {
                                     <TextInput
                                         style={[styles.textDesc2]}
                                         multiline={true}
-                                    
+
 
                                         textAlignVertical='top'
                                         editable={Platform.OS === 'ios' ? false : true}
