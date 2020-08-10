@@ -39,6 +39,12 @@ interface LIST {
     id: string,
     numberStatus: number
 }
+interface LISTCOMMENTS {
+    id: string,
+    idPost: string,
+    comment: string,
+    date: string
+}
 
 const width = Dimensions.get("window").width;
 const height = Dimensions.get("window").height;
@@ -50,8 +56,10 @@ const List: React.FC = () => {
     const [enabledStatesItems, setEnabledStatesItems] = useState<boolean>(false);
     const { nameUser, setNameUser } = useNameUser();
     const { userSaved, setUserSaved } = useSavedUser();
+    const [comments, setComments] = useState<string>('');
     const { list } = useList();
     const [isVisibleModal3, setISVisibleModal3] = useState<boolean>(false);
+    const [isVisibleModal4, setISVisibleModal4] = useState<boolean>(false);
     const [loading, setLoading] = useState<boolean>(false);
     const [okIOS, setOkIOS] = useState<boolean>(false);
     const [title, setTitle] = useState<string>('');
@@ -66,6 +74,17 @@ const List: React.FC = () => {
     const [isVisibleModalDelete, setISVisibleModalDelete] = useState<boolean>(false);
     const [isVisibleModalMAIS, setISVisibleModalMAIS] = useState<boolean>(false);
     const [searchText, setSearchText] = useState<string>('');
+    const [itemComments, setItemComments] = useState<LISTCOMMENTS[]>([]);
+    const [idPostComments, setIdPostComments] = useState<string>('');
+    useEffect(() => {
+        firestore().collection('comments').onSnapshot((res) => {
+            setItemComments([])
+            res.docs.forEach((response: any) => {
+                setItemComments(itemComments => [...itemComments, response.data()])
+                console.log('coommetys', response.data())
+            })
+        })
+    }, [])
 
 
     const detectMultiValues = (date: string) => {
@@ -294,12 +313,56 @@ const List: React.FC = () => {
         velocityThreshold: 0.3,
         directionalOffsetThreshold: 50
     };
+    const configSWIPE2 = {
+        velocityThreshold: 0.3,
+        directionalOffsetThreshold: 30
+    };
 
     function visibleMais(item: LIST) {
         setItemView(item);
         setISVisibleModalMAIS(true);
     }
+    function openModalAddComments(item: LIST) {
+        setIdPostComments(item.id)
+        setISVisibleModal4(true);
 
+    }
+
+    function addCommentsTarea() {
+        if (comments.length == 0) {
+            return Toast.showWithGravity('Ingrese su comentario', Toast.LONG, Toast.TOP)
+        }
+        var chars = 'abcdefghijklmnopqrstuvwxyz0123456789'.split('');
+        var result = '';
+        for (var i = 0; i < 21; i++) {
+            var x = Math.floor(Math.random() * chars.length);
+            result += chars[x];
+        }
+        const ID = result;
+        const DATA = {
+            id: ID,
+            idPost: idPostComments,
+            comment: comments,
+            date: moment(new Date()).format('YYYY-MM-DD')
+        }
+        firestore().collection('comments').doc(`${ID}`).set(DATA).then(() => {
+            setISVisibleModal4(false);
+            setComments('')
+            return Toast.showWithGravity('Comentario hecho con éxito', Toast.LONG, Toast.TOP);
+        }).catch((e) => {
+            setISVisibleModal4(false);
+            setComments('')
+            console.log('error', e)
+            return Toast.showWithGravity('Ocurrio un error', Toast.LONG, Toast.TOP);
+        })
+    }
+    function deleteComments(id: string) {
+        firestore().collection('comments').doc(`${id}`).delete().then(() => {
+            return Toast.showWithGravity('Comentario eliminado con éxito', Toast.LONG, Toast.TOP);
+        }).catch(() => {
+            return Toast.showWithGravity('Error al eliminar el comentario', Toast.LONG, Toast.TOP);
+        })
+    }
 
 
     function RenderItems(item: LIST) {
@@ -313,7 +376,14 @@ const List: React.FC = () => {
                         config={configSWIPE}>
                         <TouchableWithoutFeedback onPress={() => visibleMais(item)}>
                             <View style={[styles.itemContain]}>
-                                <View style={[styles.borderColorStatus, { backgroundColor: item.status }]} />
+                                <TouchableWithoutFeedback onPress={() => openModalAddComments(item)}>
+                                    <View style={[styles.borderColorStatus, { backgroundColor: item.status, flexDirection: 'column-reverse', alignItems: 'center' }]} >
+                                        <View style={{ width: '100%', height: '20%', alignItems: 'center', justifyContent: 'center' }}>
+                                            <Image style={{ height: '50%', width: '50%' }} source={require('../../assets/more.png')} />
+                                        </View>
+                                    </View>
+                                </TouchableWithoutFeedback>
+
                                 <View style={styles.bodyContainerItem}>
                                     <View style={styles.containerEmail}>
                                         <Text numberOfLines={1} style={[styles.textEmail]}>{item.email.toLowerCase()}</Text>
@@ -351,6 +421,21 @@ const List: React.FC = () => {
                     </GestureRecognizer>
                 </View>
                 <View style={styles.separator} />
+                {itemComments.map(res => res.idPost == item.id ?
+                    <GestureRecognizer onSwipeRight={() => deleteComments(res.id)}   config={configSWIPE} key={res.id}>
+                        <View style={styles.separator} />
+                        <View style={styles.comments}>
+                            <View style={styles.containerCommentsView}>
+                                <View style={[styles.containerComments, { flexDirection: 'row' }]}>
+                                    <View style={styles.borderColorComments} />
+                                    <View style={[styles.commentsContainer, { padding: width * 0.009 }]}>
+                                        <TextInput style={{ textAlign: 'left' }} maxLength={265} editable={Platform.OS == 'ios' ? false : true} multiline value={res.comment} />
+                                    </View>
+                                </View>
+                            </View>
+                        </View>
+                    </GestureRecognizer>
+                    : null)}
             </>
         );
     }
@@ -460,6 +545,40 @@ const List: React.FC = () => {
                     </View>
                 </View>
             </Modal>
+
+
+
+            <Modal
+                swipeDirection="down"
+                customBackdrop={
+                    <TouchableWithoutFeedback onPress={() => setISVisibleModal4(false)}>
+                        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.8)' }} />
+                    </TouchableWithoutFeedback>
+                }
+                isVisible={isVisibleModal4}
+                onBackButtonPress={() => setISVisibleModal4(false)}
+                onSwipeComplete={() => setISVisibleModal4(false)}>
+                <View style={styles.conatainerModal4}>
+                    <View style={[styles.containerModal4, { top: getStatusBarHeight(true) }]} >
+
+                        <TextInput
+                            style={styles.inputAddTitle}
+                            placeholder={'Comentario'}
+                            maxLength={265}
+                            value={comments}
+                            onChangeText={(e) => setComments(e)}
+                        />
+                        <View onTouchStart={addCommentsTarea} style={styles.submitList}>
+                            {loading ?
+                                <ActivityIndicator size={'large'} color='white' />
+                                :
+                                <Text style={styles.textLive}>Registrar esta comentario</Text>}
+                        </View>
+
+                    </View>
+                </View>
+            </Modal>
+
 
             <Modal
                 swipeDirection="down"

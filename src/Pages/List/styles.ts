@@ -18,43 +18,48 @@ const styles = StyleSheet.create({
         marginRight: 10,
         marginTop: 17
     },
-    containerSearch:{
-        width:'100%',
-        height: width*0.2,
-        justifyContent:'center',
-        alignItems:'center',
-        backgroundColor:'#E5E5E5'
+    containerSearch: {
+        width: '100%',
+        height: width * 0.2,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#E5E5E5'
 
     },
-    iconSearch:{
-        height:'100%',
+    iconSearch: {
+        height: '100%',
         width: '20%',
-        justifyContent:'center',
-        alignItems:'center',
+        justifyContent: 'center',
+        alignItems: 'center',
     },
-    searchInput:{
-        height:'100%',
+    searchInput: {
+        height: '100%',
         width: '80%',
-        paddingHorizontal: width*0.04,
-        justifyContent:'flex-start',
+        paddingHorizontal: width * 0.04,
+        justifyContent: 'flex-start',
         flexDirection: 'row',
-        alignItems:'center',
+        alignItems: 'center',
     },
-    containerItemSearch:{
+    containerItemSearch: {
         width: '90%',
-        height:'65%',
-        backgroundColor:'white',
+        height: '65%',
+        backgroundColor: 'white',
         elevation: 2,
-        borderRadius: width*0.02,
+        borderRadius: width * 0.02,
         shadowOffset: { width: 5, height: 5 },
         shadowColor: "black",
         shadowOpacity: 0.4,
         shadowRadius: 10,
         justifyContent: 'space-between',
         alignItems: 'center',
-        flexDirection:'row'
+        flexDirection: 'row'
     },
     conatainerModal3: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'flex-start',
+    },
+    conatainerModal4: {
         flex: 1,
         alignItems: 'center',
         justifyContent: 'flex-start',
@@ -131,6 +136,14 @@ const styles = StyleSheet.create({
 
     },
     containerModal3: {
+        width: width * 0.9,
+        height: width * 0.6,
+        borderRadius: ((width * 0.1) / 2),
+        backgroundColor: '#e5e5e5',
+        justifyContent: 'space-evenly',
+        alignItems: 'center'
+    },
+    containerModal4: {
         width: width * 0.9,
         height: width * 0.6,
         borderRadius: ((width * 0.1) / 2),
@@ -314,17 +327,17 @@ const styles = StyleSheet.create({
     buttomModalDel: {
         width: '40%',
         height: '70%',
-        borderRadius: width*0.02,
+        borderRadius: width * 0.02,
         justifyContent: 'center',
-        alignItems:'center',
+        alignItems: 'center',
         elevation: 5,
         shadowOffset: { width: 5, height: 5 },
         shadowColor: "black",
         shadowOpacity: 0.6,
         shadowRadius: 10,
     },
-    textButtomDel:{
-        fontSize: width*0.045,
+    textButtomDel: {
+        fontSize: width * 0.045,
         color: 'white',
         textAlign: 'auto',
         fontWeight: '600',
@@ -370,6 +383,48 @@ const styles = StyleSheet.create({
         justifyContent: 'space-evenly',
         alignItems: 'center'
 
+    },
+    comments: {
+        width: '100%',
+        height: width * 0.2,
+        justifyContent: 'center',
+        alignItems: 'center',
+
+    },
+    containerCommentsView: {
+        width: '90%',
+        height: width * 0.2,
+        justifyContent: 'center',
+        alignItems: 'flex-end',
+
+    },
+    containerComments: {
+        width: '90%',
+        height: width * 0.2,
+        justifyContent: 'center',
+        borderRadius: width * 0.03,
+        alignItems: 'center',
+        backgroundColor: 'white',
+        elevation: 5,
+        shadowOffset: { width: 5, height: 5 },
+        shadowColor: "black",
+        shadowOpacity: 0.6,
+        shadowRadius: 10,
+    },
+    borderColorComments: {
+        height: '100%',
+        width: '5%',
+        backgroundColor: '#808080',
+        borderTopLeftRadius: width * 0.03,
+        borderBottomLeftRadius: width * 0.03,
+
+    },
+    commentsContainer: {
+        height: '100%',
+        width: '95%',
+        backgroundColor: 'white',
+        borderTopRightRadius: width * 0.03,
+        borderBottomRightRadius: width * 0.03,
     }
 });
 export default styles;

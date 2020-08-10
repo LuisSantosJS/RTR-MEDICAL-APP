@@ -21,7 +21,7 @@ const Router: React.FC = () => {
     }
     return (
         <>
-            <StatusBar barStyle={'light-content'} backgroundColor={'#141414'} />
+            <StatusBar barStyle={'light-content'} backgroundColor={'#141414'}  />
             <AuthRouter />
         </>
     );
