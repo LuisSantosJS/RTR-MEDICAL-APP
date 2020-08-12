@@ -20,6 +20,7 @@ interface LIST {
     title: string,
     statusText: string,
     id: string,
+    dateAtual: string,
     numberStatus: number
 }
 

@@ -29,8 +29,8 @@ const styles = StyleSheet.create({
 
     },
     itemContain: {
-        width: '90%',
-        height: width * 0.5,
+         width: '90%',
+        // height: width * 0.5,
         borderRadius: width * 0.03,
         backgroundColor: 'white',
         elevation: 5,
@@ -62,6 +62,13 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'stretch',
         paddingHorizontal: width * 0.02
+    },
+    bodyContainerItem3: {
+        width: '95%',
+        height: width * 0.4,
+        justifyContent: 'space-between',
+        alignItems: 'stretch',
+        padding: width * 0.03
     },
     itemContainView: {
         width: '90%',

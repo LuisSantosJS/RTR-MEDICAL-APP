@@ -35,6 +35,7 @@ interface LIST {
     title: string,
     statusText: string,
     id: string,
+    dateAtual: string,
     numberStatus: number
 }
 
@@ -43,9 +44,13 @@ interface LISTCOMMENTS {
     idPost: string,
     comment: string,
     date: string,
+    solit: boolean,
     color: string,
     nameUser: string,
     email: string,
+    numberStatus: number,
+    statusText: string,
+    status: string,
 }
 
 
@@ -63,12 +68,15 @@ const InfoTarea: React.FC = () => {
     const [loading, setLoading] = useState<boolean>(false);
     const [isVisibleModal4, setISVisibleModal4] = useState<boolean>(false);
     const [isVisibleModal5, setISVisibleModal5] = useState<boolean>(false);
-
+    const [ItemDelete, setItemDelete] = useState<LISTCOMMENTS>();
+    const [isVisibleModalDelete, setISVisibleModalDelete] = useState<boolean>(false);
     const configSWIPE = {
         velocityThreshold: 0.3,
         directionalOffsetThreshold: 50
     };
     useEffect(() => { }, [listComments])
+
+ 
 
     useEffect(() => {
         firestore().collection('comments').onSnapshot(res => {
@@ -79,7 +87,7 @@ const InfoTarea: React.FC = () => {
                 }
             })
         })
-        return ()=>{
+        return () => {
 
         }
     }, [])
@@ -130,6 +138,47 @@ const InfoTarea: React.FC = () => {
 
     }
 
+    function updateSolit(number: number, item: LISTCOMMENTS) {
+
+        if (number == 2) {
+            return firestore().collection('comments').doc(`${item.id}`).update({
+                statusText: 'Finalizado',
+                status: 'green',
+                numberStatus: 2,
+
+
+            }).then(() => {
+                Toast.showWithGravity('Estado cambiado', Toast.LONG, Toast.TOP)
+            }).catch(() => {
+                Toast.showWithGravity('Se produjo un error al actualizar', Toast.LONG, Toast.TOP)
+            })
+        }
+        if (number == 1) {
+            return firestore().collection('comments').doc(`${item.id}`).update({
+                statusText: 'Pendiente',
+                numberStatus: 1,
+                status: 'orange'
+            }).then(() => {
+                Toast.showWithGravity('Estado cambiado', Toast.LONG, Toast.TOP)
+            }).catch(() => {
+                Toast.showWithGravity('Se produjo un error al actualizar', Toast.LONG, Toast.TOP)
+            })
+        }
+        if (number == 0) {
+            return firestore().collection('comments').doc(`${item.id}`).update({
+                statusText: 'Cancelado',
+                numberStatus: 0,
+                status: 'red'
+            }).then(() => {
+                Toast.showWithGravity('Estado cambiado', Toast.LONG, Toast.TOP)
+            }).catch(() => {
+                Toast.showWithGravity('Se produjo un error al actualizar', Toast.LONG, Toast.TOP)
+            })
+        }
+
+    }
+
+
     function addCommentsTarea() {
         if (comments.length == 0 && !toggleCheckBox) {
             return Toast.showWithGravity('Ingrese su comentario', Toast.LONG, Toast.TOP)
@@ -152,8 +201,24 @@ const InfoTarea: React.FC = () => {
             nameUser: nameUser,
             color: toggleCheckBox ? 'blue' : '#808080',
             email: emailUser,
-            date: moment(new Date()).format('YYYY-MM-DD')
+            solit: toggleCheckBox ? true : false,
+            date: moment(new Date()).format('YYYY-MM-DD'),
+            numberStatus: 1,
+            statusText: 'Pendiente',
+            status: 'orange',
+
         }
+        function deleteItem() {
+            firestore().collection('list').doc(`${ItemDelete?.id}`).delete().then(() => {
+                Toast.showWithGravity('Tarea eliminada con éxito', Toast.LONG, Toast.TOP);
+                return setISVisibleModalDelete(false);
+            }).catch(() => {
+                Toast.showWithGravity('Se produjo un error al eliminar la tarea', Toast.LONG, Toast.TOP);
+                return setISVisibleModalDelete(false);
+            })
+    
+        }
+
         firestore().collection('comments').doc(`${ID}`).set(DATA).then(() => {
             setISVisibleModal4(false);
             setISVisibleModal5(false);
@@ -181,7 +246,66 @@ const InfoTarea: React.FC = () => {
         })
     }
 
+    function deleteSolit(id: string) {
+        firestore().collection('comments').doc(`${id}`).delete().then(() => {
+            return Toast.showWithGravity('eliminado con éxito', Toast.LONG, Toast.TOP);
+        }).catch(() => {
+            return Toast.showWithGravity('Error al eliminar el comentario', Toast.LONG, Toast.TOP);
+        })
+    }
+
     function RenderComments(item: LISTCOMMENTS) {
+        if (item.solit == true) {
+            return (
+                <View key={item.id}>
+                    <View style={styles.separator} />
+                    <View style={styles.separator} />
+                    <View style={styles.containerList}>
+                        <GestureRecognizer
+                            onSwipeRight={() => deleteSolit(item.id)}
+                            config={configSWIPE}>
+                            <TouchableWithoutFeedback onPress={() => { }}>
+                                <View style={[styles.itemContain]}>
+                                    <TouchableWithoutFeedback onPress={() => { }}>
+                                        <View style={[styles.borderColorStatus, { backgroundColor: item.status, flexDirection: 'column-reverse', alignItems: 'center' }]} >
+                                        </View>
+                                    </TouchableWithoutFeedback>
+
+                                    <View style={styles.bodyContainerItem2}>
+                                        <Text numberOfLines={1} style={[styles.textEmail]}>{item.email.toLowerCase()}</Text>
+                                        <TextInput
+                                            value={`${item.comment}`}
+                                            multiline={true}
+                                            editable={Platform.OS === 'ios' ? false : false}
+                                            textAlignVertical='top'
+                                            scrollEnabled
+                                            style={[styles.textDesc]} />
+
+                                        <Text numberOfLines={1} style={styles.textEmail} >@{item.nameUser}</Text>
+                                    </View>
+                                    <Animated.View style={[styles.viewOpcacityItem2]} >
+                                
+                                        <SwitchSelector
+                                        options={[
+                                            { label: "C", value: "0", activeColor: 'red' },
+                                            { label: "P", value: "1", activeColor: 'orange' },
+                                            { label: "F", value: "2", activeColor: 'green' },
+
+                                        ]}
+                                        buttonColor={item.status}
+                                        initial={Number(item.numberStatus)}
+                                        onPress={(value: number) => updateSolit(value, item)}
+
+                                    />
+                                    <Text style={styles.textEmail}>{item.statusText}</Text>
+                                    </Animated.View>
+                                </View>
+                            </TouchableWithoutFeedback>
+                        </GestureRecognizer>
+                    </View>
+                </View>
+            )
+        }
         return (
             <View key={item.id}>
                 <View style={styles.separator} />
@@ -197,7 +321,7 @@ const InfoTarea: React.FC = () => {
                                     </View>
                                 </TouchableWithoutFeedback>
 
-                                <View style={styles.bodyContainerItem2}>
+                                <View style={styles.bodyContainerItem3}>
                                     <Text numberOfLines={1} style={[styles.textEmail]}>{item.email.toLowerCase()}</Text>
                                     <TextInput
                                         value={`${item.comment}`}
@@ -209,9 +333,7 @@ const InfoTarea: React.FC = () => {
 
                                     <Text numberOfLines={1} style={styles.textEmail} >@{item.nameUser}</Text>
                                 </View>
-                                <Animated.View style={[styles.viewOpcacityItem2]} >
-                                    <Text style={styles.textEmail2}>{item.date}</Text>
-                                </Animated.View>
+                     
                             </View>
                         </TouchableWithoutFeedback>
                     </GestureRecognizer>
@@ -272,6 +394,7 @@ const InfoTarea: React.FC = () => {
                                     </View>
                                 </View>
                                 <Animated.View style={[styles.viewOpcacityItem]} >
+                                    <Text style={styles.textEmail}>{item.map(item => item.dateAtual)}</Text>
                                     <Text style={styles.textEmail}>{item.map(item => item.dates)}</Text>
                                     <SwitchSelector
                                         options={[
@@ -305,12 +428,13 @@ const InfoTarea: React.FC = () => {
                 <Image resizeMode={"contain"} style={styles.iconHeader} source={require('../../assets/more.png')} />
             </TouchableOpacity>
 
-            <TouchableOpacity activeOpacity={0.7} style={styles.buttomList2} onPress={() =>{ 
+            <TouchableOpacity activeOpacity={0.7} style={styles.buttomList2} onPress={() => {
                 openModalAddSolucitud();
                 setToggleCheckBox(true);
-                
-                }}>
-                <Image resizeMode={"contain"} style={styles.iconHeader2} source={require('../../assets/buy.png')} />
+
+
+            }}>
+                <Image resizeMode={"contain"} style={[styles.iconHeader2]} source={require('../../assets/addrequire.png')} />
             </TouchableOpacity>
             <Modal
                 swipeDirection="down"
@@ -380,6 +504,7 @@ const InfoTarea: React.FC = () => {
                     </View>
                 </View>
             </Modal>
+          
 
         </>
     )

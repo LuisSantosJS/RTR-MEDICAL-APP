@@ -37,6 +37,7 @@ interface LIST {
     title: string,
     statusText: string,
     id: string,
+    dateAtual: string,
     numberStatus: number
 }
 interface LISTCOMMENTS {
@@ -155,6 +156,7 @@ const List: React.FC = () => {
     }, [userSaved])
 
     function exitModal3() {
+
         setEnabledStatesItems(true)
         setISVisibleModal3(false)
         setEnabledStatesItems(false)
@@ -162,6 +164,7 @@ const List: React.FC = () => {
     }
 
     function handleADDIOS() {
+        Toast.showWithGravity('seleccione el plazo de entrega',Toast.LONG, Toast.TOP );
         setEnabledStatesItems(true)
         if (okIOS === false) {
             setShowIOS(true);
@@ -176,6 +179,7 @@ const List: React.FC = () => {
     }
 
     function handleADDAndroid() {
+        Toast.showWithGravity('seleccione el plazo de entrega',Toast.LONG, Toast.TOP );
         setEnabledStatesItems(true)
         setShow(true);
         setEnabledStatesItems(false)
@@ -223,6 +227,7 @@ const List: React.FC = () => {
             date: Platform.OS == 'ios' ? dateIOS : date,
             name: nameUser,
             email: emailUser.toLowerCase(),
+            dateAtual: moment(new Date()).format('YYYY-MM-DD'),
             statusText: 'Pendiente',
             title: title,
             numberStatus: 1,
@@ -376,6 +381,7 @@ const List: React.FC = () => {
         return (
             <>
                 <View style={styles.separator} />
+                <View style={styles.separator} />
                 <View style={styles.containerList}>
                     <GestureRecognizer
                         onSwipeRight={() => deleteListItem(item)}
@@ -403,7 +409,9 @@ const List: React.FC = () => {
                                     </View>
                                 </View>
                                 <Animated.View style={[styles.viewOpcacityItem]} >
+                                    <Text style={styles.textEmail}>{item.dateAtual}</Text>
                                     <Text style={styles.textEmail}>{item.dates}</Text>
+
                                     <SwitchSelector
                                         options={[
                                             { label: "C", value: "0", activeColor: 'red' },
@@ -423,6 +431,7 @@ const List: React.FC = () => {
                         </TouchableWithoutFeedback>
                     </GestureRecognizer>
                 </View>
+                <View style={styles.separator} />
                 <View style={styles.separator} />
                 <View style={styles.separator} />
 
