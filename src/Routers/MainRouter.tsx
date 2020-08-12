@@ -1,8 +1,9 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import List from '../Pages/List'
-import Users from '../Pages/Users'
+import List from '../Pages/List';
+import Users from '../Pages/Users';
+import InfoTarea from '../Pages/InfoTarea';
 const MainRouter: React.FC = () => {
     const Stack = createStackNavigator();
     return (
@@ -14,9 +15,15 @@ const MainRouter: React.FC = () => {
                     options={{
                         headerShown: false
                     }} />
-                                    <Stack.Screen
+                <Stack.Screen
                     name="Users"
                     component={Users}
+                    options={{
+                        headerShown: false
+                    }} />
+                <Stack.Screen
+                    name="InfoTarea"
+                    component={InfoTarea}
                     options={{
                         headerShown: false
                     }} />

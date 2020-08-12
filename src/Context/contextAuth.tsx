@@ -45,6 +45,8 @@ type ContextType = {
     setList: (value: LIST[]) => void;
     users: USERS[];
     setUsers: (value: USERS[]) => void;
+    infoList: string;
+    setInfoList: (value: string) => void;
 };
 
 const ContextApp = createContext<ContextType>({
@@ -60,6 +62,8 @@ const ContextApp = createContext<ContextType>({
     setList: (value: LIST[]) => { },
     users: [],
     setUsers: (value: USERS[]) => { },
+    infoList: '',
+    setInfoList: (value: string) => { },
 
 });
 
@@ -72,6 +76,7 @@ const ProviderAuth: React.FC = ({ children }) => {
     const [emailUser, setEmailUser] = useState<string>('');
     const [list, setList] = useState<LIST[]>([]);
     const [users, setUsers] = useState<USERS[]>([]);
+    const [infoList, setInfoList] = useState<string>('');
 
 
 
@@ -205,7 +210,8 @@ const ProviderAuth: React.FC = ({ children }) => {
             nameUser, setNameUser,
             emailUser, setEmailUser,
             list, setList,
-            users, setUsers
+            users, setUsers,
+            infoList, setInfoList
         }}>
             {children}
         </ContextApp.Provider>
@@ -250,8 +256,11 @@ export function useUsers() {
     const { users, setUsers } = infoUser;
     return { users, setUsers };
 }
-
-
+export function useInfoList() {
+    const infoUser: ContextType = useContext(ContextApp);
+    const { infoList, setInfoList } = infoUser;
+    return { infoList, setInfoList };
+}
 
 
 

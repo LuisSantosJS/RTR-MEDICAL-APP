@@ -25,7 +25,7 @@ import { useNavigation } from '@react-navigation/native';
 import Dialog from "react-native-dialog";
 import GestureRecognizer from 'react-native-swipe-gestures';
 import { getStatusBarHeight } from 'react-native-status-bar-height';
-import { useNameUser, useEmailUser, useSavedUser, useList } from '../../Context/contextAuth';
+import { useNameUser, useEmailUser, useSavedUser, useList, useInfoList } from '../../Context/contextAuth';
 import { FlatList } from 'react-native-gesture-handler';
 
 interface LIST {
@@ -53,6 +53,7 @@ const List: React.FC = () => {
     const navigation = useNavigation();
     const [visibleDialog, setVisibleDialog] = useState<boolean>(false);
     const { emailUser, setEmailUser } = useEmailUser();
+    const { infoList, setInfoList } = useInfoList();
     const [enabledStatesItems, setEnabledStatesItems] = useState<boolean>(false);
     const { nameUser, setNameUser } = useNameUser();
     const { userSaved, setUserSaved } = useSavedUser();
@@ -363,6 +364,11 @@ const List: React.FC = () => {
             return Toast.showWithGravity('Error al eliminar el comentario', Toast.LONG, Toast.TOP);
         })
     }
+    function handleVisibleMais(item: LIST) {
+
+        setInfoList(item.id)
+        navigation.navigate('InfoTarea')
+    }
 
 
     function RenderItems(item: LIST) {
@@ -374,13 +380,10 @@ const List: React.FC = () => {
                     <GestureRecognizer
                         onSwipeRight={() => deleteListItem(item)}
                         config={configSWIPE}>
-                        <TouchableWithoutFeedback onPress={() => visibleMais(item)}>
+                        <TouchableWithoutFeedback onPress={() => handleVisibleMais(item)}>
                             <View style={[styles.itemContain]}>
                                 <TouchableWithoutFeedback onPress={() => openModalAddComments(item)}>
                                     <View style={[styles.borderColorStatus, { backgroundColor: item.status, flexDirection: 'column-reverse', alignItems: 'center' }]} >
-                                        <View style={{ width: '100%', height: '20%', alignItems: 'center', justifyContent: 'center' }}>
-                                            <Image style={{ height: '50%', width: '50%' }} source={require('../../assets/more.png')} />
-                                        </View>
                                     </View>
                                 </TouchableWithoutFeedback>
 
@@ -421,21 +424,8 @@ const List: React.FC = () => {
                     </GestureRecognizer>
                 </View>
                 <View style={styles.separator} />
-                {itemComments.map(res => res.idPost == item.id ?
-                    <GestureRecognizer onSwipeRight={() => deleteComments(res.id)}   config={configSWIPE} key={res.id}>
-                        <View style={styles.separator} />
-                        <View style={styles.comments}>
-                            <View style={styles.containerCommentsView}>
-                                <View style={[styles.containerComments, { flexDirection: 'row' }]}>
-                                    <View style={styles.borderColorComments} />
-                                    <View style={[styles.commentsContainer, { padding: width * 0.009 }]}>
-                                        <TextInput style={{ textAlign: 'left' }} maxLength={265} editable={Platform.OS == 'ios' ? false : true} multiline value={res.comment} />
-                                    </View>
-                                </View>
-                            </View>
-                        </View>
-                    </GestureRecognizer>
-                    : null)}
+                <View style={styles.separator} />
+
             </>
         );
     }
