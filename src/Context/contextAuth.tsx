@@ -83,21 +83,21 @@ const ProviderAuth: React.FC = ({ children }) => {
     useEffect(() => {
         messaging().subscribeToTopic('medical').then(() => {
             messaging().onMessage(async remoteMessage => {
-                console.log('A new FCM message arrived!', JSON.stringify(remoteMessage));
+              //  console.log('A new FCM message arrived!', JSON.stringify(remoteMessage));
                 Notification.configure().localNotification({
-                    message: JSON.stringify(remoteMessage.notification?.body),
+                    message: remoteMessage.notification?.body,
                     showWhen: true,
                     autoCancel: true,
                     largeIcon: "ic_launcher",
                     smallIcon: "ic_notification",
-                    bigText: JSON.stringify(remoteMessage.notification?.title),
+                    bigText: remoteMessage.notification?.title,
                     color: "grey",
                     vibrate: true,
                     vibration: 300,
                     priority: "high",
                     visibility: "private",
                     importance: "high",
-                    title: JSON.stringify(remoteMessage.notification?.title),
+                    title: remoteMessage.notification?.title,
                     playSound: true,
                     soundName: "default",
                     number: 10,

@@ -242,11 +242,14 @@ const List: React.FC = () => {
             setDescription('');
             setTitle('');
             Toast.showWithGravity('Tarea registrada con éxito', Toast.LONG, Toast.TOP);
-            firestore().collection('notification').add({
-                dates: moment(Platform.OS == 'ios' ? dateIOS : date).format('YYYY-MM-DD'),
-                email: emailUser,
-                title: title,
-            });
+            // firestore().collection('notification').add({
+            //     id: ID,
+            //     dates: moment(Platform.OS == 'ios' ? dateIOS : date).format('YYYY-MM-DD'),
+            //     email: emailUser,
+            //     title: title,
+            //     timestamp: firestore.Timestamp.now().toMillis(),
+            //     description: description,
+            // });
         }).catch(() => {
             Toast.showWithGravity('Se produjo un error al registrar la tarea', Toast.LONG, Toast.TOP);
         })
@@ -376,13 +379,13 @@ const List: React.FC = () => {
         navigation.navigate('InfoTarea')
     }
 
-    const alertNotification = (timestamp: number) => {
-        const initialDate = timestamp - 100000;
-        if (Number(firestore.Timestamp.now().toMillis()) >= initialDate) {
-            return true;
-        }
-        return false;
-    }
+    // const alertNotification = (timestamp: number) => {
+    //     const initialDate = timestamp - 100000;
+    //     if (Number(firestore.Timestamp.now().toMillis()) >= initialDate) {
+    //         return true;
+    //     }
+    //     return false;
+    // }
 
 
     function RenderItems(item: LIST) {
