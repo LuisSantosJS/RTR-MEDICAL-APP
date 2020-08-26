@@ -90,7 +90,6 @@ const ProviderAuth: React.FC = ({ children }) => {
                     autoCancel: true,
                     largeIcon: "ic_launcher",
                     smallIcon: "ic_notification",
-                    bigText: remoteMessage.notification?.title,
                     color: "grey",
                     vibrate: true,
                     vibration: 300,
@@ -118,7 +117,7 @@ const ProviderAuth: React.FC = ({ children }) => {
             authStatus === messaging.AuthorizationStatus.PROVISIONAL;
 
         if (enabled) {
-            console.log('Authorization status:', authStatus);
+           // console.log('Authorization status:', authStatus);
         }
     }
 
