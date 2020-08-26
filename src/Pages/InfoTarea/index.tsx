@@ -261,7 +261,7 @@ const InfoTarea: React.FC = () => {
                                     </TouchableWithoutFeedback>
 
                                     <View style={styles.bodyContainerItem2}>
-                                        <Text numberOfLines={1} style={[styles.textEmail]}>{item.email.toLowerCase()}</Text>
+                                        <Text numberOfLines={1} style={[styles.textEmail]}>@{item.nameUser} {item.email.toLowerCase()}</Text>
                                         <TextInput
                                             value={`${item.comment}`}
                                             multiline={true}
@@ -270,7 +270,6 @@ const InfoTarea: React.FC = () => {
                                             scrollEnabled
                                             style={[styles.textDesc]} />
 
-                                        <Text numberOfLines={1} style={styles.textEmail} >@{item.nameUser}</Text>
                                     </View>
                                     <Animated.View style={[styles.viewOpcacityItem2]} >
 
@@ -311,7 +310,7 @@ const InfoTarea: React.FC = () => {
                                 </TouchableWithoutFeedback>
 
                                 <View style={styles.bodyContainerItem3}>
-                                    <Text numberOfLines={1} style={[styles.textEmail]}>{item.email.toLowerCase()}</Text>
+                                <Text numberOfLines={1} style={[styles.textEmail]}>@{item.nameUser} {item.email.toLowerCase()}</Text>
                                     <TextInput
                                         value={`${item.comment}`}
                                         multiline={true}
@@ -320,7 +319,6 @@ const InfoTarea: React.FC = () => {
                                         scrollEnabled
                                         style={[styles.textDesc]} />
 
-                                    <Text numberOfLines={1} style={styles.textEmail} >@{item.nameUser}</Text>
                                 </View>
 
                             </View>

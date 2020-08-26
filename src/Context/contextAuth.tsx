@@ -21,7 +21,8 @@ interface LIST {
     statusText: string,
     id: string,
     dateAtual: string,
-    numberStatus: number
+    numberStatus: number,
+    notificationDate: number
 }
 
 interface USERS {
@@ -83,8 +84,25 @@ const ProviderAuth: React.FC = ({ children }) => {
         messaging().subscribeToTopic('medical').then(() => {
             messaging().onMessage(async remoteMessage => {
                 console.log('A new FCM message arrived!', JSON.stringify(remoteMessage));
+                Notification.configure().localNotification({
+                    message: JSON.stringify(remoteMessage.notification?.body),
+                    showWhen: true,
+                    autoCancel: true,
+                    largeIcon: "ic_launcher",
+                    smallIcon: "ic_notification",
+                    bigText: JSON.stringify(remoteMessage.notification?.title),
+                    color: "grey",
+                    vibrate: true,
+                    vibration: 300,
+                    priority: "high",
+                    visibility: "private",
+                    importance: "high",
+                    title: JSON.stringify(remoteMessage.notification?.title),
+                    playSound: true,
+                    soundName: "default",
+                    number: 10,
+                })
             });
-  
         })
 
     }, []);
@@ -93,28 +111,6 @@ const ProviderAuth: React.FC = ({ children }) => {
 
     useEffect(() => { }, [list, nameUser, loading, emailUser, userSaved, users])
 
-
-    function pushNotificationSend() {
-        Notification.configure().localNotification({
-            message: 'Nueva tarea registrada!',
-            showWhen: true,
-            autoCancel: true,
-            largeIcon: "ic_launcher",
-            smallIcon: "ic_notification",
-            bigText: 'Nueva tarea registrada!',
-            color: "grey",
-            vibrate: true,
-            vibration: 300,
-            priority: "high",
-            visibility: "private",
-            importance: "high",
-            title: "Nueva Notificación",
-            playSound: true,
-            soundName: "default",
-            number: 10,
-        })
-
-    }
     async function requestUserPermission() {
         const authStatus = await messaging().requestPermission();
         const enabled =

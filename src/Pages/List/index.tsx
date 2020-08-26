@@ -38,7 +38,8 @@ interface LIST {
     statusText: string,
     id: string,
     dateAtual: string,
-    numberStatus: number
+    numberStatus: number,
+    notificationDate: number
 }
 interface LISTCOMMENTS {
     id: string,
@@ -83,7 +84,7 @@ const List: React.FC = () => {
             setItemComments([])
             res.docs.forEach((response: any) => {
                 setItemComments(itemComments => [...itemComments, response.data()])
-               // console.log('coommetys', response.data())
+                // console.log('coommetys', response.data())
             })
         })
     }, [])
@@ -164,7 +165,7 @@ const List: React.FC = () => {
     }
 
     function handleADDIOS() {
-        Toast.showWithGravity('seleccione el plazo de entrega',Toast.LONG, Toast.TOP );
+        Toast.showWithGravity('seleccione el plazo de entrega', Toast.LONG, Toast.TOP);
         setEnabledStatesItems(true)
         if (okIOS === false) {
             setShowIOS(true);
@@ -179,7 +180,7 @@ const List: React.FC = () => {
     }
 
     function handleADDAndroid() {
-        Toast.showWithGravity('seleccione el plazo de entrega',Toast.LONG, Toast.TOP );
+        Toast.showWithGravity('seleccione el plazo de entrega', Toast.LONG, Toast.TOP);
         setEnabledStatesItems(true)
         setShow(true);
         setEnabledStatesItems(false)
@@ -375,6 +376,14 @@ const List: React.FC = () => {
         navigation.navigate('InfoTarea')
     }
 
+    const alertNotification = (timestamp: number) => {
+        const initialDate = timestamp - 100000;
+        if (Number(firestore.Timestamp.now().toMillis()) >= initialDate) {
+            return true;
+        }
+        return false;
+    }
+
 
     function RenderItems(item: LIST) {
 
@@ -390,6 +399,7 @@ const List: React.FC = () => {
                             <View style={[styles.itemContain]}>
                                 <TouchableWithoutFeedback onPress={() => openModalAddComments(item)}>
                                     <View style={[styles.borderColorStatus, { backgroundColor: item.status, flexDirection: 'column-reverse', alignItems: 'center' }]} >
+
                                     </View>
                                 </TouchableWithoutFeedback>
 
