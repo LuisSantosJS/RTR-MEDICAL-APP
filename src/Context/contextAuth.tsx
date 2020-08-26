@@ -79,6 +79,16 @@ const ProviderAuth: React.FC = ({ children }) => {
     const [users, setUsers] = useState<USERS[]>([]);
     const [infoList, setInfoList] = useState<string>('');
 
+    useEffect(() => {
+        messaging().subscribeToTopic('medical').then(() => {
+            messaging().onMessage(async remoteMessage => {
+                console.log('A new FCM message arrived!', JSON.stringify(remoteMessage));
+            });
+  
+        })
+
+    }, []);
+
 
 
     useEffect(() => { }, [list, nameUser, loading, emailUser, userSaved, users])
@@ -122,7 +132,7 @@ const ProviderAuth: React.FC = ({ children }) => {
             .collection('users')
             .doc(`${auth().currentUser?.uid}`)
             .update({
-                tokens: firestore.FieldValue.arrayUnion(token),
+                tokens: String(token),
             });
     }
 
@@ -171,9 +181,9 @@ const ProviderAuth: React.FC = ({ children }) => {
     useEffect(() => {
         if (auth().currentUser?.uid !== undefined) {
             if (Platform.OS == 'android') {
-                firestore().collection('notification').onSnapshot(() => {
-                    return pushNotificationSend();
-                })
+                // firestore().collection('notification').onSnapshot(() => {
+                //     return pushNotificationSend();
+                // })
             }
         }
     }, [userSaved])
@@ -196,9 +206,6 @@ const ProviderAuth: React.FC = ({ children }) => {
         }
 
         return () => {
-            messaging().onTokenRefresh(token => {
-                saveTokenToDatabase(token);
-            });
         }
     }, [userSaved]);
 

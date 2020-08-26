@@ -10,11 +10,10 @@ import {
     Text,
     Animated
 } from 'react-native';
-import CheckBox from '@react-native-community/checkbox';
 import moment from 'moment';
 import styles from './styles';
 import Modal from 'react-native-modal';
-
+import Dialog from "react-native-dialog";
 import { useNavigation } from '@react-navigation/native';
 import firestore from '@react-native-firebase/firestore';
 import Toast from 'react-native-simple-toast';
@@ -58,6 +57,7 @@ const InfoTarea: React.FC = () => {
     const { infoList, setInfoList } = useInfoList();
     const { list, setList } = useList();
     const navigation = useNavigation();
+    const [visibleDialog, setVisibleDialog] = useState<boolean>(false);
     const [toggleCheckBox, setToggleCheckBox] = useState<boolean>(false)
     const { emailUser, setEmailUser } = useEmailUser();
     const { nameUser, setNameUser } = useNameUser();
@@ -68,7 +68,7 @@ const InfoTarea: React.FC = () => {
     const [loading, setLoading] = useState<boolean>(false);
     const [isVisibleModal4, setISVisibleModal4] = useState<boolean>(false);
     const [isVisibleModal5, setISVisibleModal5] = useState<boolean>(false);
-    const [ItemDelete, setItemDelete] = useState<LISTCOMMENTS>();
+    const [ItemDelete, setItemDelete] = useState<LISTCOMMENTS | LIST>();
     const [isVisibleModalDelete, setISVisibleModalDelete] = useState<boolean>(false);
     const configSWIPE = {
         velocityThreshold: 0.3,
@@ -76,7 +76,7 @@ const InfoTarea: React.FC = () => {
     };
     useEffect(() => { }, [listComments])
 
- 
+
 
     useEffect(() => {
         firestore().collection('comments').onSnapshot(res => {
@@ -208,16 +208,6 @@ const InfoTarea: React.FC = () => {
             status: 'orange',
 
         }
-        function deleteItem() {
-            firestore().collection('list').doc(`${ItemDelete?.id}`).delete().then(() => {
-                Toast.showWithGravity('Tarea eliminada con éxito', Toast.LONG, Toast.TOP);
-                return setISVisibleModalDelete(false);
-            }).catch(() => {
-                Toast.showWithGravity('Se produjo un error al eliminar la tarea', Toast.LONG, Toast.TOP);
-                return setISVisibleModalDelete(false);
-            })
-    
-        }
 
         firestore().collection('comments').doc(`${ID}`).set(DATA).then(() => {
             setISVisibleModal4(false);
@@ -238,20 +228,19 @@ const InfoTarea: React.FC = () => {
             return Toast.showWithGravity('Ocurrio un error', Toast.LONG, Toast.TOP);
         })
     }
-    function deleteComments(id: string) {
-        firestore().collection('comments').doc(`${id}`).delete().then(() => {
+    function deleteComments() {
+        setVisibleDialog(false);
+        firestore().collection('comments').doc(`${ItemDelete?.id}`).delete().then(() => {
+            
             return Toast.showWithGravity('Comentario eliminado con éxito', Toast.LONG, Toast.TOP);
         }).catch(() => {
             return Toast.showWithGravity('Error al eliminar el comentario', Toast.LONG, Toast.TOP);
         })
     }
 
-    function deleteSolit(id: string) {
-        firestore().collection('comments').doc(`${id}`).delete().then(() => {
-            return Toast.showWithGravity('eliminado con éxito', Toast.LONG, Toast.TOP);
-        }).catch(() => {
-            return Toast.showWithGravity('Error al eliminar el comentario', Toast.LONG, Toast.TOP);
-        })
+    function confirmDeleteComment(item: LISTCOMMENTS) {
+        setItemDelete(item);
+        setVisibleDialog(true)
     }
 
     function RenderComments(item: LISTCOMMENTS) {
@@ -262,7 +251,7 @@ const InfoTarea: React.FC = () => {
                     <View style={styles.separator} />
                     <View style={styles.containerList}>
                         <GestureRecognizer
-                            onSwipeRight={() => deleteSolit(item.id)}
+                            onSwipeRight={() => confirmDeleteComment(item)}
                             config={configSWIPE}>
                             <TouchableWithoutFeedback onPress={() => { }}>
                                 <View style={[styles.itemContain]}>
@@ -276,7 +265,7 @@ const InfoTarea: React.FC = () => {
                                         <TextInput
                                             value={`${item.comment}`}
                                             multiline={true}
-                                            editable={Platform.OS === 'ios' ? false : false}
+                                            editable={Platform.OS === 'ios' ? false : true}
                                             textAlignVertical='top'
                                             scrollEnabled
                                             style={[styles.textDesc]} />
@@ -284,20 +273,20 @@ const InfoTarea: React.FC = () => {
                                         <Text numberOfLines={1} style={styles.textEmail} >@{item.nameUser}</Text>
                                     </View>
                                     <Animated.View style={[styles.viewOpcacityItem2]} >
-                                
+
                                         <SwitchSelector
-                                        options={[
-                                            { label: "C", value: "0", activeColor: 'red' },
-                                            { label: "P", value: "1", activeColor: 'orange' },
-                                            { label: "F", value: "2", activeColor: 'green' },
+                                            options={[
+                                                { label: "C", value: "0", activeColor: 'red' },
+                                                { label: "P", value: "1", activeColor: 'orange' },
+                                                { label: "F", value: "2", activeColor: 'green' },
 
-                                        ]}
-                                        buttonColor={item.status}
-                                        initial={Number(item.numberStatus)}
-                                        onPress={(value: number) => updateSolit(value, item)}
+                                            ]}
+                                            buttonColor={item.status}
+                                            initial={Number(item.numberStatus)}
+                                            onPress={(value: number) => updateSolit(value, item)}
 
-                                    />
-                                    <Text style={styles.textEmail}>{item.statusText}</Text>
+                                        />
+                                        <Text style={styles.textEmail}>{item.statusText}</Text>
                                     </Animated.View>
                                 </View>
                             </TouchableWithoutFeedback>
@@ -312,7 +301,7 @@ const InfoTarea: React.FC = () => {
                 <View style={styles.separator} />
                 <View style={styles.containerList}>
                     <GestureRecognizer
-                        onSwipeRight={() => deleteComments(item.id)}
+                        onSwipeRight={() => confirmDeleteComment(item)}
                         config={configSWIPE}>
                         <TouchableWithoutFeedback onPress={() => { }}>
                             <View style={[styles.itemContain]}>
@@ -326,14 +315,14 @@ const InfoTarea: React.FC = () => {
                                     <TextInput
                                         value={`${item.comment}`}
                                         multiline={true}
-                                        editable={Platform.OS === 'ios' ? false : false}
+                                        editable={Platform.OS === 'ios' ? false : true}
                                         textAlignVertical='top'
                                         scrollEnabled
                                         style={[styles.textDesc]} />
 
                                     <Text numberOfLines={1} style={styles.textEmail} >@{item.nameUser}</Text>
                                 </View>
-                     
+
                             </View>
                         </TouchableWithoutFeedback>
                     </GestureRecognizer>
@@ -350,73 +339,76 @@ const InfoTarea: React.FC = () => {
                     <Image resizeMode={"contain"} style={styles.iconHeader} source={require('../../assets/left-arrow.png')} />
                 </TouchableOpacity>
                 <Text style={styles.textHeader}>Lista de Tareas</Text>
-                <TouchableOpacity style={styles.ViewIconHeader} onPress={() => {/*setVisibleDialog(true)*/ }} >
-                    <Image resizeMode={"contain"} style={styles.iconHeader} source={require('../../assets/salir.png')} />
-                </TouchableOpacity>
+                <View style={styles.ViewIconHeader}  >
+                </View>
             </View>
 
             <View style={[styles.container]}>
-                <View style={styles.separator} />
-                <View style={styles.separator} />
-                <View style={styles.containerList}>
-                    <GestureRecognizer
-                        onSwipeRight={() => { }}
-                        config={configSWIPE}>
-                        <TouchableWithoutFeedback onPress={() => { }}>
-                            <View style={[styles.itemContain]}>
-                                <TouchableWithoutFeedback onPress={() => { }}>
-                                    <View style={[styles.borderColorStatus, { backgroundColor: String(item.map(item => item.status)), flexDirection: 'column-reverse', alignItems: 'center' }]} >
-                                    </View>
-                                </TouchableWithoutFeedback>
-
-                                <View style={styles.bodyContainerItem}>
-                                    <View style={styles.containerEmail}>
-                                        <Text numberOfLines={1} style={[styles.textEmail]}>{item.map(item => item.email.toLowerCase())}</Text>
-                                    </View>
-                                    <View style={[styles.containerName]}>
-                                        <TextInput
-                                            value={`${item.map(item => item.title.toLowerCase())}`}
-                                            multiline={true}
-                                            scrollEnabled
-                                            editable={Platform.OS === 'ios' ? false : true}
-                                            textAlignVertical='top'
-                                            style={styles.textName} />
-                                    </View>
-                                    <View style={styles.containerDescrip}>
-                                        <TextInput
-                                            value={`${item.map(item => item.description)}`}
-                                            multiline={true}
-                                            scrollEnabled
-                                            editable={Platform.OS === 'ios' ? false : true}
-                                            textAlignVertical='top'
-                                            style={styles.textDesc} />
-
-                                    </View>
-                                </View>
-                                <Animated.View style={[styles.viewOpcacityItem]} >
-                                    <Text style={styles.textEmail}>{item.map(item => item.dateAtual)}</Text>
-                                    <Text style={styles.textEmail}>{item.map(item => item.dates)}</Text>
-                                    <SwitchSelector
-                                        options={[
-                                            { label: "C", value: "0", activeColor: 'red' },
-                                            { label: "P", value: "1", activeColor: 'orange' },
-                                            { label: "F", value: "2", activeColor: 'green' },
-
-                                        ]}
-                                        buttonColor={String(item.map(item => item.status))}
-                                        initial={Number(item.map(item => item.numberStatus))}
-                                        onPress={(value: number) => updateTarefa(value)}
-                                    />
-                                    <Text style={styles.textEmail}>{item.map(item => item.statusText)}</Text>
-                                </Animated.View>
-                            </View>
-                        </TouchableWithoutFeedback>
-                    </GestureRecognizer>
-                </View>
-                <FlatList style={{ flex: 1 }}
+                <FlatList style={{ flex: 1, width: width }}
                     data={listComments}
                     showsVerticalScrollIndicator={false}
-                    ListFooterComponent={() => <View style={{ width: '100%', height: width * 0.4 }} />}
+                    ListHeaderComponent={() => <>
+                        <View style={[styles.containerList, { top: width * 0.05 }]}>
+                            <GestureRecognizer
+                                onSwipeRight={() => { }}
+                                config={configSWIPE}>
+                                <TouchableWithoutFeedback onPress={() => { }}>
+                                    <View style={[styles.itemContain]}>
+                                        <TouchableWithoutFeedback onPress={() => { }}>
+                                            <View style={[styles.borderColorStatus, { backgroundColor: String(item.map(item => item.status)), flexDirection: 'column-reverse', alignItems: 'center' }]} >
+                                            </View>
+                                        </TouchableWithoutFeedback>
+
+                                        <View style={styles.bodyContainerItem}>
+                                            <View style={styles.containerEmail}>
+                                                <Text numberOfLines={1} style={[styles.textEmail]}>{item.map(item => item.email.toLowerCase())}</Text>
+                                            </View>
+                                            <View style={[styles.containerName]}>
+                                                <TextInput
+                                                    value={`${item.map(item => item.title.toLowerCase())}`}
+                                                    multiline={true}
+                                                    scrollEnabled
+                                                    editable={Platform.OS === 'ios' ? false : true}
+                                                    textAlignVertical='top'
+                                                    style={styles.textName} />
+                                            </View>
+                                            <View style={styles.containerDescrip}>
+                                                <TextInput
+                                                    value={`${item.map(item => item.description)}`}
+                                                    multiline={true}
+                                                    scrollEnabled
+                                                    editable={Platform.OS === 'ios' ? false : true}
+                                                    textAlignVertical='top'
+                                                    style={styles.textDesc} />
+
+                                            </View>
+                                        </View>
+                                        <Animated.View style={[styles.viewOpcacityItem]} >
+                                            <Text style={styles.textEmail}>{item.map(item => item.dateAtual)}</Text>
+                                            <Text style={styles.textEmail}>{item.map(item => item.dates)}</Text>
+                                            <SwitchSelector
+                                                options={[
+                                                    { label: "C", value: "0", activeColor: 'red' },
+                                                    { label: "P", value: "1", activeColor: 'orange' },
+                                                    { label: "F", value: "2", activeColor: 'green' },
+
+                                                ]}
+                                                buttonColor={String(item.map(item => item.status))}
+                                                initial={Number(item.map(item => item.numberStatus))}
+                                                onPress={(value: number) => updateTarefa(value)}
+                                            />
+                                            <Text style={styles.textEmail}>{item.map(item => item.statusText)}</Text>
+                                        </Animated.View>
+                                    </View>
+                                </TouchableWithoutFeedback>
+                            </GestureRecognizer>
+                        </View>
+                        <View style={styles.separator} />
+                        <View style={styles.separator} />
+                    </>
+
+                    }
+                    ListFooterComponent={() => <View style={{ width: '100%', height: width * 0.6 }} />}
                     renderItem={({ item }) => RenderComments(item)}
 
                 />
@@ -431,7 +423,6 @@ const InfoTarea: React.FC = () => {
             <TouchableOpacity activeOpacity={0.7} style={styles.buttomList2} onPress={() => {
                 openModalAddSolucitud();
                 setToggleCheckBox(true);
-
 
             }}>
                 <Image resizeMode={"contain"} style={[styles.iconHeader2]} source={require('../../assets/addrequire.png')} />
@@ -504,7 +495,16 @@ const InfoTarea: React.FC = () => {
                     </View>
                 </View>
             </Modal>
-          
+            <Dialog.Container visible={visibleDialog}>
+                <Dialog.Title>Eliminar?</Dialog.Title>
+                <Dialog.Description>
+                    Desea eliminar este comentario o solicitud?
+               </Dialog.Description>
+                <Dialog.Button label=" cancelar " onPress={() => setVisibleDialog(false)} />
+                <Dialog.Button label="  No  " onPress={() => setVisibleDialog(false)} />
+                <Dialog.Button label="  Si  " onPress={() => deleteComments()} />
+            </Dialog.Container>
+
 
         </>
     )

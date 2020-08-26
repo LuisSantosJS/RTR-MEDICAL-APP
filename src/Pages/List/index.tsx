@@ -83,7 +83,7 @@ const List: React.FC = () => {
             setItemComments([])
             res.docs.forEach((response: any) => {
                 setItemComments(itemComments => [...itemComments, response.data()])
-                console.log('coommetys', response.data())
+               // console.log('coommetys', response.data())
             })
         })
     }, [])
