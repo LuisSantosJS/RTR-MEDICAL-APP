@@ -5,32 +5,31 @@ import React, {
     useEffect
 } from 'react';
 import auth from '@react-native-firebase/auth';
+import io from "socket.io-client";
+import AsyncStorage from '@react-native-community/async-storage';
 import firestore from '@react-native-firebase/firestore';
 import Toast from 'react-native-simple-toast';
 import messaging from '@react-native-firebase/messaging';
 import Notification from '../Services/notification';
 import { Platform } from 'react-native';
+import api from '../Services/api';
+
 
 interface LIST {
-    dates: string,
+    userID: string,
     description: string,
     email: string,
-    name: string,
     status: string,
+    name: string,
     title: string,
     statusText: string,
     id: string,
+    timestamp: string,
+    timestampTarea: string,
+    views: string,
     dateAtual: string,
+    date: string,
     numberStatus: number,
-    notificationDate: number
-}
-
-interface USERS {
-    id: string,
-    disabled: boolean,
-    email: string,
-    name: string,
-    password: string
 }
 
 
@@ -39,16 +38,10 @@ type ContextType = {
     setUserSaved: (value: boolean) => void;
     loading: boolean;
     setLoading: (value: boolean) => void;
-    nameUser: string;
-    setNameUser: (value: string) => void;
-    emailUser: string;
-    setEmailUser: (value: string) => void;
-    list: LIST[];
-    setList: (value: LIST[]) => void;
-    users: USERS[];
-    setUsers: (value: USERS[]) => void;
     infoList: string;
     setInfoList: (value: string) => void;
+    userID: string;
+    setUserID: (value: string) => void;
 };
 
 const ContextApp = createContext<ContextType>({
@@ -56,16 +49,10 @@ const ContextApp = createContext<ContextType>({
     setUserSaved: (value: boolean) => { },
     loading: false,
     setLoading: (value: boolean) => { },
-    nameUser: '',
-    setNameUser: (value: string) => { },
-    emailUser: '',
-    setEmailUser: (value: string) => { },
-    list: [],
-    setList: (value: LIST[]) => { },
-    users: [],
-    setUsers: (value: USERS[]) => { },
     infoList: '',
     setInfoList: (value: string) => { },
+    userID: '',
+    setUserID: (value: string) => { },
 
 });
 
@@ -74,16 +61,111 @@ const ProviderAuth: React.FC = ({ children }) => {
 
     const [userSaved, setUserSaved] = useState<boolean>(false);
     const [loading, setLoading] = useState<boolean>(true);
-    const [nameUser, setNameUser] = useState<string>('');
-    const [emailUser, setEmailUser] = useState<string>('');
-    const [list, setList] = useState<LIST[]>([]);
-    const [users, setUsers] = useState<USERS[]>([]);
+    const socket = io("http://localhost:3000");
     const [infoList, setInfoList] = useState<string>('');
+    const [userID, setUserID] = useState<string>('');
+
 
     useEffect(() => {
+        // function getIDUSEr(name: string) {
+        //     if (name === 'Stella') {
+        //         return 1
+        //     }
+        //     if (name === 'Jorge') {
+        //         return 2
+        //     }
+        //     if (name === 'Wilson') {
+        //         return 3
+        //     }
+        //     if (name === 'Yeison') {
+        //         return 4
+        //     }
+        //     if (name === 'Henry') {
+        //         return 5
+        //     }
+        //     if (name === 'Luis') {
+        //         return 6
+        //     }
+        //     if (name === 'Admin') {
+        //         return 7
+        //     }
+        //     if (name === 'Sandro') {
+        //         return 8
+        //     }
+        //     if (name === 'Juliana Álvarez') {
+        //         return 9
+        //     }
+        //     if (name === 'Ruben') {
+        //         return 10
+        //     }
+        //     if (name === 'Juliana') {
+        //         return 11
+        //     }
+        //     if (name === 'Jorge') {
+        //         return 12
+        //     }
+        //     if (name === 'Martha') {
+        //         return 13
+        //     }
+        //     if (name === 'Fernando') {
+        //         return 14
+        //     }
+        //     if (name === 'Sofia') {
+        //         return 15
+        //     }
+
+        // }
+        // firestore().collection('list').get().then((res) => {
+        //     res.docs.forEach((e, index) => {
+        //         const a = e.data()
+        //         const DATA = {
+        //             userID: getIDUSEr(a.name),
+        //             numberStatus: a.numberStatus,
+        //             status: a.status,
+        //             timestamp: a.timestamp,
+        //             timestampTarea: a.timestampTarea,
+        //             description: a.description,
+        //             date: a.dates,
+        //             dateAtual: a.dateAtual == null ? a.dates : a.dateAtual,
+        //             title: a.title
+        //         }
+        //         console.log(index)
+        //         firestore().collection('comments').where('idPost', '==', a.id).get().then(res => {
+        //             res.docs.forEach(e => {
+        //                 const b = e.data();
+        //                 const DATACOMMENT = {
+        //                     userID: getIDUSEr(b.nameUser),
+        //                     postID: index,
+        //                     color: b.color,
+        //                     comment: b.comment,
+        //                     date: b.date,
+        //                     numberStatus: b.numberStatus,
+        //                     solit: b.solit,
+        //                     status: b.status,
+        //                     statusText: b.statusText
+        //                 }
+
+        //                 // api.post('/comments/create', DATACOMMENT).then((e) => {
+        //                 //     // console.log('===================')
+        //                 //     console.log(e.data)
+        //                 //     // console.log('===================')
+        //                 // }).catch((ERRRRROOO) => console.log('ERRRRROOO COOMMEM', ERRRRROOO))
+
+        //             });
+
+
+        //         })
+        //         //   api.post('/posts/create', DATA).then((e) => {
+        //         //         // console.log('===================')
+        //         //         // console.log(e)
+        //         //         // console.log('===================')
+        //         //     }).catch((ERRRRROOO) => console.log('ERRRRROOO', ERRRRROOO))
+
+        //     })
+        // })
         messaging().subscribeToTopic('medical').then(() => {
             messaging().onMessage(async remoteMessage => {
-              //  console.log('A new FCM message arrived!', JSON.stringify(remoteMessage));
+                //  console.log('A new FCM message arrived!', JSON.stringify(remoteMessage));
                 Notification.configure().localNotification({
                     message: remoteMessage.notification?.body,
                     showWhen: true,
@@ -108,7 +190,7 @@ const ProviderAuth: React.FC = ({ children }) => {
 
 
 
-    useEffect(() => { }, [list, nameUser, loading, emailUser, userSaved, users])
+    // useEffect(() => { }, [list, nameUser, loading, emailUser, userSaved, ])
 
     async function requestUserPermission() {
         const authStatus = await messaging().requestPermission();
@@ -117,92 +199,91 @@ const ProviderAuth: React.FC = ({ children }) => {
             authStatus === messaging.AuthorizationStatus.PROVISIONAL;
 
         if (enabled) {
-           // console.log('Authorization status:', authStatus);
+            // console.log('Authorization status:', authStatus);
         }
     }
 
 
-    async function saveTokenToDatabase(token: any) {
-        await firestore()
-            .collection('users')
-            .doc(`${auth().currentUser?.uid}`)
-            .update({
-                tokens: String(token),
-            });
+    // async function saveTokenToDatabase(token: any) {
+    //     await firestore()
+    //         .collection('users')
+    //         .doc(`${auth().currentUser?.uid}`)
+    //         .update({
+    //             tokens: String(token),
+    //         });
+    // }
+
+
+    async function loadInfoUser() {
+        try {
+            const value = await AsyncStorage.getItem('@userID')
+            console.log('id', value)
+            if (value == null) {
+                return setLoading(false)
+            }
+            setUserID(JSON.stringify(Number(value)));
+            loadInfo(value)
+        } catch (e) {
+            console.log(e)
+        }
+
+
+
+        // messaging()
+        //     .getToken()
+        //     .then(token => {
+        //         return saveTokenToDatabase(token);
+        //     });
+
+        // firestore().collection('users').doc(`${auth().currentUser?.uid}`).onSnapshot((response: any) => {
+        //     if (response.data().disabled === true) {
+        //         setUserSaved(false);
+        //         setLoading(false);
+        //         setNameUser('');
+        //         setEmailUser('');
+        //         Toast.showWithGravity('Este usuario ha sido deshabilitado', Toast.LONG, Toast.TOP);
+        //     } else {
+        //         setNameUser(response.data().name);
+        //         setEmailUser(response.data().email);
+        //         setUserSaved(true);
+        //         setLoading(false);
+        //     }
+        // })
     }
 
-
-    function loadUsers() {
-        firestore().collection('users').onSnapshot((response) => {
-            setUsers([]);
-
-            response.docs.forEach((res: any) => {
-                const user = res.data();
-                if (String(user.email).toLowerCase() !== 'medicalrtr@gmail.com') {
-                    setUsers(users => [...users, user]);
-                }
-            })
-
-        })
-    }
-
-    function loadInfoUser() {
-        firestore().collection('users').doc(`${auth().currentUser?.uid}`).onSnapshot((response: any) => {
-            if (response.data().disabled === true) {
+    function loadInfo(value: string) {
+        api.get(`/users/unique?userID=${value}`).then(res => {
+            if (res.data.disabled === 1) {
                 setUserSaved(false);
                 setLoading(false);
-                setNameUser('');
-                setEmailUser('');
+                // setNameUser('');
+                // setEmailUser('');
                 Toast.showWithGravity('Este usuario ha sido deshabilitado', Toast.LONG, Toast.TOP);
             } else {
-                setNameUser(response.data().name);
-                setEmailUser(response.data().email);
+                // setEmailUser(String(res.data.email));
+                // setNameUser(String(res.data.name));
+                // // setUserID(String(res.data.id));
                 setUserSaved(true);
                 setLoading(false);
             }
         })
-    }
-
-
-    function loadLists() {
-        firestore().collection('list').orderBy('timestampTarea', 'desc').onSnapshot(res => {
-            setList([]);
-            res.docs.forEach((response: any) => {
-                //console.log('tarefas', response.data());
-                setList(list => [...list, response.data()])
-            })
-        })
-    }
-    useEffect(() => {
-        if (auth().currentUser?.uid !== undefined) {
-            if (Platform.OS == 'android') {
-                // firestore().collection('notification').onSnapshot(() => {
-                //     return pushNotificationSend();
-                // })
+        let val = value;
+        socket.on(`users-${Number(val)}`, (res: any) => {
+            if (res.disabled == true) {
+                setUserSaved(false);
+                Toast.showWithGravity('Este usuario ha sido deshabilitado', Toast.LONG, Toast.TOP);
             }
-        }
-    }, [userSaved])
+        })
+
+        return requestUserPermission();
+    }
+
 
     useEffect(() => {
-        if (auth().currentUser?.uid !== undefined) {
-            loadInfoUser();
-            loadLists();
-            loadUsers();
-            requestUserPermission();
-            messaging()
-                .getToken()
-                .then(token => {
-                    return saveTokenToDatabase(token);
-                });
 
-            // Listen to whether the token changes
-        } else {
-            setLoading(false);
-        }
+        loadInfoUser();
 
-        return () => {
-        }
-    }, [userSaved]);
+    }, []);
 
 
 
@@ -210,11 +291,8 @@ const ProviderAuth: React.FC = ({ children }) => {
         <ContextApp.Provider value={{
             userSaved, setUserSaved,
             loading, setLoading,
-            nameUser, setNameUser,
-            emailUser, setEmailUser,
-            list, setList,
-            users, setUsers,
-            infoList, setInfoList
+            infoList, setInfoList,
+            userID, setUserID
         }}>
             {children}
         </ContextApp.Provider>
@@ -235,35 +313,19 @@ export function useLoading() {
     return { loading, setLoading };
 }
 
-export function useNameUser() {
-    const infoUser: ContextType = useContext(ContextApp);
-    const { nameUser, setNameUser } = infoUser;
-    return { nameUser, setNameUser };
-}
 
-
-
-export function useEmailUser() {
-    const infoUser: ContextType = useContext(ContextApp);
-    const { emailUser, setEmailUser } = infoUser;
-    return { emailUser, setEmailUser };
-}
-
-export function useList() {
-    const infoUser: ContextType = useContext(ContextApp);
-    const { list, setList } = infoUser;
-    return { list, setList };
-}
-export function useUsers() {
-    const infoUser: ContextType = useContext(ContextApp);
-    const { users, setUsers } = infoUser;
-    return { users, setUsers };
-}
 export function useInfoList() {
     const infoUser: ContextType = useContext(ContextApp);
     const { infoList, setInfoList } = infoUser;
     return { infoList, setInfoList };
 }
+
+export function useUserID() {
+    const infoUser: ContextType = useContext(ContextApp);
+    const { userID, setUserID } = infoUser;
+    return { userID, setUserID };
+}
+
 
 
 

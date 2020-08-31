@@ -12,16 +12,16 @@ import {
     ActivityIndicator
 
 } from 'react-native';
+import api from '../../Services/api';
 import Modal from 'react-native-modal';
+import io from "socket.io-client";
 import Toast from 'react-native-simple-toast';
-import { useNameUser, useEmailUser, useSavedUser, useUsers } from '../../Context/contextAuth';
+import { useSavedUser } from '../../Context/contextAuth';
 import Dialog from "react-native-dialog";
 import * as EmailValidator from 'email-validator';
-import firestore from '@react-native-firebase/firestore';
 import { useNavigation } from '@react-navigation/native';
 import styles from './styles';
 import { getStatusBarHeight } from 'react-native-status-bar-height';
-import auth from '@react-native-firebase/auth';
 
 interface USERS {
     id: string,
@@ -38,7 +38,6 @@ const Users: React.FC = () => {
     const navigation = useNavigation();
     const [visibleDialog, setVisibleDialog] = useState<boolean>(false);
     const [visibleDialog2, setVisibleDialog2] = useState<boolean>(false);
-    const { setEmailUser } = useEmailUser();
     const [loadingAuth, setLoadingAuth] = useState<boolean>(false);
     const [isVisibleModal2, setISVisibleModal2] = useState<boolean>(false);
     const [idUser, setIdUser] = useState<string>('');
@@ -48,9 +47,9 @@ const Users: React.FC = () => {
     const passwordInputRef = useRef().current;
     const nameInputRef = useRef().current;
     const [password, setPassword] = useState<string>('');
-    const { setNameUser } = useNameUser();
     const { setUserSaved } = useSavedUser();
-    const { users } = useUsers();
+    const socket = io("http://localhost:3000");
+    const [users, setUsers] = useState<USERS[]>([]);
 
     function handleLogin2() {
         setISVisibleModal2(true);
@@ -58,10 +57,41 @@ const Users: React.FC = () => {
     }
 
     useEffect(() => {
+        loadUsers()
         return () => {
+            setUsers([])
             setVisibleDialog(false);
+
         }
     }, [])
+    useEffect(() => {
+        socket.on(`userss`, (res: USERS[]) => {
+            setUsers(res)
+        })
+    }, [])
+
+
+    function loadUsers() {
+
+        api.get('/users').then(res => {
+            res.data.forEach((element: any) => {
+                if (String(element.email).toLowerCase() !== 'medicalrtr@gmail.com') {
+                    setUsers(users => [...users, element]);
+                    // console.log(element)
+                }
+            });
+        })
+        // firestore().collection('users').onSnapshot((response) => {
+        //     setUsers([]);
+        //     response.docs.forEach((res: any) => {
+        //         const user = res.data();
+        //         if (String(user.email).toLowerCase() !== 'medicalrtr@gmail.com') {
+        //             setUsers(users => [...users, user]);
+        //         }
+        //     })
+
+        // })
+    }
 
     function exitModal2() {
         Keyboard.dismiss();
@@ -87,41 +117,24 @@ const Users: React.FC = () => {
             Toast.showWithGravity('Contraseña invalida', Toast.LONG, Toast.TOP);
             return Toast.showWithGravity('Ingrese una contraseña con más de 6 dígitos', Toast.LONG, Toast.TOP);
         }
-
-
-        auth().createUserWithEmailAndPassword(`${email.toLowerCase()}`, `${password}`).then(() => {
-            const uid: any = auth().currentUser?.uid;
-
-            const DATA = {
-                id: uid,
-                name: name,
-                email: email.toLowerCase(),
-                password,
-                disabled: false
-            }
-            firestore().collection('users').doc(`${uid}`).set(DATA).then(() => {
+        api.post('/users/create', {
+            name: name,
+            email: email.toLowerCase(),
+            password,
+        }).then(res => {
+            if (res.data.message == 'success') {
                 setLoadingAuth(false);
                 setEmail('');
                 setPassword('');
                 setName('');
                 setISVisibleModal2(false)
                 Toast.showWithGravity('Sucesso', Toast.LONG, Toast.TOP);
-
-            }).catch((err) => {
-                console.log(err)
+            } else {
                 setLoadingAuth(false);
                 setISVisibleModal2(false)
                 return Toast.showWithGravity('Se produjo un error al crear un usuario', Toast.LONG, Toast.TOP);
-            })
-        }).catch((err) => {
-            console.log(err)
-            setLoadingAuth(false);
-            setISVisibleModal2(false)
-            return Toast.showWithGravity('Se produjo un error al crear un usuario', Toast.LONG, Toast.TOP);
+            }
         })
-
-
-
     }
 
 
@@ -129,31 +142,37 @@ const Users: React.FC = () => {
 
     function exitAccount() {
         setVisibleDialog(false);
-        setInterval(() => setVisibleDialog(false), 1000);
-        auth().signOut().then(() => {
-            setEmailUser('');
-            setNameUser('');
-            setUserSaved(false);
-        })
+
+        setUserSaved(false);
+
     }
 
     function removeUser() {
         setVisibleDialog2(false);
-        setInterval(() => setVisibleDialog2(false), 1000);
-        firestore().collection('users').doc(`${idUser}`).update({
-            disabled: true
-        }).then(() => {
-            Toast.showWithGravity('Éxito', Toast.LONG, Toast.TOP)
+        api.post('/users/status/update', {
+            userID: idUser,
+            status: true
+        }).then((res) => {
+            if (res.data.message == 'success') {
+                Toast.showWithGravity('Éxito', Toast.LONG, Toast.TOP)
+            } else {
+                Toast.showWithGravity('Ocurrio un error', Toast.LONG, Toast.TOP)
+            }
         }).catch(() => {
             Toast.showWithGravity('Ocurrio un error', Toast.LONG, Toast.TOP)
         })
     }
 
     function addUser(id: string) {
-        firestore().collection('users').doc(`${id}`).update({
-            disabled: false
-        }).then(() => {
-            Toast.showWithGravity('Éxito', Toast.LONG, Toast.TOP)
+        api.post('/users/status/update', {
+            userID: id,
+            status: false
+        }).then((res) => {
+            if (res.data.message == 'success') {
+                Toast.showWithGravity('Éxito', Toast.LONG, Toast.TOP)
+            } else {
+                Toast.showWithGravity('Ocurrio un error', Toast.LONG, Toast.TOP)
+            }
         }).catch(() => {
             Toast.showWithGravity('Ocurrio un error', Toast.LONG, Toast.TOP)
         })
@@ -176,10 +195,10 @@ const Users: React.FC = () => {
                         <View style={[styles.borderColorStatus, { backgroundColor: 'blue' }]} />
                         <View style={styles.bodyContainerItem}>
                             <View style={styles.containerEmail}>
-                                <Text numberOfLines={1}  style={[styles.textEmail]}>{item.email.toLowerCase()}</Text>
+                                <Text numberOfLines={1} style={[styles.textEmail]}>{item.email.toLowerCase()}</Text>
                             </View>
                             <View style={styles.containerName}>
-                                <Text numberOfLines={1}  style={styles.textName}>{item.name}</Text>
+                                <Text numberOfLines={1} style={styles.textName}>{item.name}</Text>
                             </View>
                         </View>
                         <View style={[styles.containerEXCUI]}>
@@ -212,14 +231,18 @@ const Users: React.FC = () => {
                     <Image resizeMode={"contain"} style={styles.iconHeader} source={require('../../assets/salir.png')} />
                 </TouchableOpacity>
             </View>
-            <FlatList
-                style={{ flex: 1, backgroundColor: '#E5E5E5' }}
-                data={users}
-                ListHeaderComponent={() => <View style={styles.separator} />}
-                renderItem={({ item }) => RenderUsers(item)}
-                keyExtractor={(item: USERS) => String(item.id)}
+            {users.length === 0 ? <>
+                <View style={{ width: '100%', height: '8%' }} />
+                <ActivityIndicator size='large' color='#141414' /></> :
+                <FlatList
+                    style={{ flex: 1, backgroundColor: '#E5E5E5' }}
+                    data={users}
 
-            />
+                    ListHeaderComponent={() => <View style={styles.separator} />}
+                    renderItem={({ item }) => RenderUsers(item)}
+                    keyExtractor={(item: USERS) => String(item.id)}
+
+                />}
 
             <View>
                 <Dialog.Container visible={visibleDialog}>

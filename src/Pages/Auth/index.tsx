@@ -8,16 +8,19 @@ import {
     Image,
     Keyboard,
     ActivityIndicator,
-    StatusBar
+    StatusBar,
+    ImageStore
 } from 'react-native';
+import AsyncStorage from '@react-native-community/async-storage';
 import * as EmailValidator from 'email-validator';
 import styles from './styles';
+import api from '../../Services/api';
 import Toast from 'react-native-simple-toast';
 import firestore from '@react-native-firebase/firestore';
 import Modal from 'react-native-modal';
 import { getStatusBarHeight } from 'react-native-status-bar-height';
 import { TouchableOpacity } from 'react-native-gesture-handler';
-import { useSavedUser, useEmailUser, useNameUser } from '../../Context/contextAuth';
+import { useSavedUser, useUserID } from '../../Context/contextAuth';
 import auth from '@react-native-firebase/auth';
 const width = Dimensions.get("window").width;
 const height = Dimensions.get("window").height;
@@ -25,8 +28,7 @@ const height = Dimensions.get("window").height;
 
 
 const Auth: React.FC = () => {
-    const { setNameUser } = useNameUser();
-    const { setEmailUser } = useEmailUser();
+    const { setUserID } = useUserID();
     const [isVisibleModal, setISVisibleModal] = useState<boolean>(false);
     const [isVisibleModal2, setISVisibleModal2] = useState<boolean>(false);
     const emailInputRef = useRef().current;
@@ -55,7 +57,18 @@ const Auth: React.FC = () => {
         setISVisibleModal2(!isVisibleModal2)
 
     }
+    async function store(data: any) {
+        try {
+            await AsyncStorage.setItem('@userID', JSON.stringify(data.id));
+            setUserID(String(data.id))
+            console.log(data)
+            setUserSaved(true)
+        }
+        catch (e) {
+            console.log(e)
+        }
 
+    }
 
     function handleSubmitLogin() {
         if (loadingAuth) {
@@ -71,35 +84,48 @@ const Auth: React.FC = () => {
             setLoadingAuth(false);
             return Toast.showWithGravity('Contraseña invalida', Toast.LONG, Toast.TOP);
         }
-        setEmailUser(email);
-        setNameUser(name);
-        auth().signInWithEmailAndPassword(email.toLowerCase(), password).then(() => {
+        api.post('/users/login', {
+            email: email.toLowerCase(),
+            password: password
+        }).then(res => {
             setLoadingAuth(false);
             setEmail('');
             setPassword('');
-            setName('');
-            firestore().collection('users').doc(`${auth().currentUser?.uid}`).get().then((response: any) => {
-                if (response.data().disabled == true) {
-                    Toast.showWithGravity('Este usuario está deshabilitado', Toast.LONG, Toast.TOP);
-                    setUserSaved(false);
-                } else {
-                    Toast.showWithGravity('Éxito', Toast.LONG, Toast.TOP)
-                    setUserSaved(true);
-                }
-            }).catch(() => {
-                Toast.showWithGravity('Éxito', Toast.LONG, Toast.TOP)
-            })
-        }).catch((e) => {
-            setLoadingAuth(false);
-            console.log(e)
-            return Toast.showWithGravity('Ocurrio un error', Toast.LONG, Toast.TOP);
+            if (res.data.message == 'error') {
+                return Toast.showWithGravity('Error', Toast.LONG, Toast.TOP);
+            }
+            if (res.data.disabled == true) {
+                return Toast.showWithGravity('Este usuario está deshabilitado', Toast.LONG, Toast.TOP);
+            }
+            return store(res.data.data)
+
         })
+        // auth().signInWithEmailAndPassword(email.toLowerCase(), password).then(() => {
+        //     setLoadingAuth(false);
+        //     setEmail('');
+        //     setPassword('');
+        //     firestore().collection('users').doc(`${auth().currentUser?.uid}`).get().then((response: any) => {
+        //         if (response.data().disabled == true) {
+        //             Toast.showWithGravity('Este usuario está deshabilitado', Toast.LONG, Toast.TOP);
+        //             setUserSaved(false);
+        //         } else {
+        //             Toast.showWithGravity('Éxito', Toast.LONG, Toast.TOP)
+        //             setUserSaved(true);
+        //         }
+        //     }).catch(() => {
+        //         Toast.showWithGravity('Éxito', Toast.LONG, Toast.TOP)
+        //     })
+        // }).catch((e) => {
+        //     setLoadingAuth(false);
+        //     console.log(e)
+        //     return Toast.showWithGravity('Ocurrio un error', Toast.LONG, Toast.TOP);
+        // })
     }
     return (
         <>
 
             <View style={styles.container}>
-                <StatusBar barStyle={'dark-content'} backgroundColor='#E5E5E5'/>
+                <StatusBar barStyle={'dark-content'} backgroundColor='#E5E5E5' />
 
                 <View style={styles.containerViewOptions}>
                     <View style={styles.containerLogo}>
@@ -155,13 +181,13 @@ const Auth: React.FC = () => {
                             />
                         </View>
                         <TouchableWithoutFeedback onPress={handleSubmitLogin}>
-                        <View style={styles.submit}>
-                            {loadingAuth ?
-                                <ActivityIndicator size='large' color='white' />
-                                :
-                                <Text style={styles.textInput}>Seguir</Text>
-                            }
-                        </View>
+                            <View style={styles.submit}>
+                                {loadingAuth ?
+                                    <ActivityIndicator size='large' color='white' />
+                                    :
+                                    <Text style={styles.textInput}>Seguir</Text>
+                                }
+                            </View>
                         </TouchableWithoutFeedback>
                     </View>
                 </View>

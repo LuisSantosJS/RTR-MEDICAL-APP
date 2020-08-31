@@ -9,6 +9,7 @@ import {
     Text,
     Animated,
     Dimensions,
+    FlatList,
     TouchableWithoutFeedback
 } from 'react-native';
 import { Modalize } from 'react-native-modalize';
@@ -18,35 +19,35 @@ import moment from 'moment';
 import SwitchSelector from "react-native-switch-selector";
 import firestore from '@react-native-firebase/firestore';
 import Toast from 'react-native-simple-toast';
+import io from "socket.io-client";
 import Modal from 'react-native-modal';
+import api from '../../Services/api';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import auth from '@react-native-firebase/auth';
 import { useNavigation } from '@react-navigation/native';
 import Dialog from "react-native-dialog";
 import GestureRecognizer from 'react-native-swipe-gestures';
 import { getStatusBarHeight } from 'react-native-status-bar-height';
-import { useNameUser, useEmailUser, useSavedUser, useList, useInfoList } from '../../Context/contextAuth';
-import { FlatList } from 'react-native-gesture-handler';
+import { useSavedUser, useInfoList, useUserID } from '../../Context/contextAuth';
+
 
 interface LIST {
-    dates: string,
+    userID: string,
     description: string,
     email: string,
-    name: string,
     status: string,
+    name: string,
     title: string,
     statusText: string,
     id: string,
+    timestamp: string,
+    timestampTarea: string,
+    views: string,
     dateAtual: string,
+    date: string,
     numberStatus: number,
-    notificationDate: number
 }
-interface LISTCOMMENTS {
-    id: string,
-    idPost: string,
-    comment: string,
-    date: string
-}
+
 
 const width = Dimensions.get("window").width;
 const height = Dimensions.get("window").height;
@@ -54,13 +55,12 @@ const height = Dimensions.get("window").height;
 const List: React.FC = () => {
     const navigation = useNavigation();
     const [visibleDialog, setVisibleDialog] = useState<boolean>(false);
-    const { emailUser, setEmailUser } = useEmailUser();
+    const { userID } = useUserID();
     const { infoList, setInfoList } = useInfoList();
     const [enabledStatesItems, setEnabledStatesItems] = useState<boolean>(false);
-    const { nameUser, setNameUser } = useNameUser();
     const { userSaved, setUserSaved } = useSavedUser();
     const [comments, setComments] = useState<string>('');
-    const { list } = useList();
+    const [list, setList] = useState<LIST[]>([]);
     const [isVisibleModal3, setISVisibleModal3] = useState<boolean>(false);
     const [isVisibleModal4, setISVisibleModal4] = useState<boolean>(false);
     const [loading, setLoading] = useState<boolean>(false);
@@ -77,17 +77,38 @@ const List: React.FC = () => {
     const [isVisibleModalDelete, setISVisibleModalDelete] = useState<boolean>(false);
     const [isVisibleModalMAIS, setISVisibleModalMAIS] = useState<boolean>(false);
     const [searchText, setSearchText] = useState<string>('');
-    const [itemComments, setItemComments] = useState<LISTCOMMENTS[]>([]);
+    const socket = io("http://localhost:3000");
     const [idPostComments, setIdPostComments] = useState<string>('');
+    // useEffect(() => {
+    //     api.get('/posts').then(res=>{
+    //         setItemComments([...itemComments, res.data])
+    //     })
+    // }, [])
+
     useEffect(() => {
-        firestore().collection('comments').onSnapshot((res) => {
-            setItemComments([])
-            res.docs.forEach((response: any) => {
-                setItemComments(itemComments => [...itemComments, response.data()])
-                // console.log('coommetys', response.data())
-            })
+        loadLists();
+        socket.on('posts', (res: LIST[]) => {
+            // console.log(res)
+            setList(res)
         })
+        return () => {
+
+        }
     }, [])
+    function loadLists() {
+        api.get('/posts').then(res => {
+            setList(res.data)
+        })
+
+
+        // firestore().collection('list').orderBy('timestampTarea', 'desc').onSnapshot(res => {
+        //     setList([]);
+        //     res.docs.forEach((response: any) => {
+        //         //console.log('tarefas', response.data());
+        //         setList(list => [...list, response.data()])
+        //     })
+        // })
+    }
 
 
     const detectMultiValues = (date: string) => {
@@ -96,7 +117,7 @@ const List: React.FC = () => {
         var green: number = 0;
         var orange: number = 0;
         list.forEach(res => {
-            if (res.dates === date) {
+            if (res.date === date) {
                 if (res.status === 'red') {
                     red++;
                 } if (res.status === 'green') {
@@ -121,8 +142,8 @@ const List: React.FC = () => {
 
     function loadDaysAgend() {
         list.forEach(res => {
-            const cor = detectMultiValues(res.dates);
-            mark[res.dates] = { selected: true, selectedColor: cor };
+            const cor = detectMultiValues(res.date);
+            mark[res.date] = { selected: true, selectedColor: cor };
         });
     }
 
@@ -191,11 +212,7 @@ const List: React.FC = () => {
     function exitAccount() {
         setVisibleDialog(false);
         setInterval(() => { }, 1000);
-        auth().signOut().then(() => {
-            setEmailUser('');
-            setNameUser('');
-            setUserSaved(false);
-        })
+        setUserSaved(false);
     }
 
 
@@ -216,43 +233,43 @@ const List: React.FC = () => {
             setEnabledStatesItems(false)
             return Toast.showWithGravity('Inserta un título', Toast.LONG, Toast.TOP);
         }
-        var chars = 'abcdefghijklmnopqrstuvwxyz0123456789'.split('');
-        var result = '';
-        for (var i = 0; i < 21; i++) {
-            var x = Math.floor(Math.random() * chars.length);
-            result += chars[x];
-        }
-        const ID = result;
+
         const DATA = {
-            id: ID,
-            date: Platform.OS == 'ios' ? dateIOS : date,
-            name: nameUser,
-            email: emailUser.toLowerCase(),
+
             dateAtual: moment(new Date()).format('YYYY-MM-DD'),
             statusText: 'Pendiente',
             title: title,
             numberStatus: 1,
+            userID: userID,
             description: description,
             timestamp: firestore.Timestamp.now().toMillis(),
             timestampTarea: moment(Platform.OS === 'ios' ? dateIOS : date).format('x'),
             status: 'orange',
-            dates: moment(Platform.OS == 'ios' ? dateIOS : date).format('YYYY-MM-DD')
+            date: moment(Platform.OS == 'ios' ? dateIOS : date).format('YYYY-MM-DD')
         }
-        firestore().collection('list').doc(`${ID}`).set(DATA).then(() => {
-            setDescription('');
-            setTitle('');
-            Toast.showWithGravity('Tarea registrada con éxito', Toast.LONG, Toast.TOP);
-            // firestore().collection('notification').add({
-            //     id: ID,
-            //     dates: moment(Platform.OS == 'ios' ? dateIOS : date).format('YYYY-MM-DD'),
-            //     email: emailUser,
-            //     title: title,
-            //     timestamp: firestore.Timestamp.now().toMillis(),
-            //     description: description,
-            // });
-        }).catch(() => {
-            Toast.showWithGravity('Se produjo un error al registrar la tarea', Toast.LONG, Toast.TOP);
+        console.log(JSON.stringify(userID))
+        api.post('/posts/create', DATA).then(res => {
+            console.log('create item', res.data)
+            if (res.data.message == 'success') {
+                firestore().collection('list').add(DATA);
+                Toast.showWithGravity('Tarea registrada con éxito', Toast.LONG, Toast.TOP);
+            }
         })
+
+        setDescription('');
+        setTitle('');
+
+        // firestore().collection('notification').add({
+        //     id: ID,
+        //     dates: moment(Platform.OS == 'ios' ? dateIOS : date).format('YYYY-MM-DD'),
+        //     email: emailUser,
+        //     title: title,
+        //     timestamp: firestore.Timestamp.now().toMillis(),
+        //     description: description,
+        // });
+        // }).catch(() => {
+        //     Toast.showWithGravity('Se produjo un error al registrar la tarea', Toast.LONG, Toast.TOP);
+        // })
         setISVisibleModal3(false)
         setEnabledStatesItems(false)
         return setLoading(false)
@@ -264,36 +281,43 @@ const List: React.FC = () => {
     function updateTarefa(number: number, item: LIST) {
 
         if (number == 2) {
-            return firestore().collection('list').doc(`${item.id}`).update({
+            return api.post('/posts/status/update', {
+                postID: item.id,
                 statusText: 'Finalizado',
                 status: 'green',
                 numberStatus: 2,
-
-
-            }).then(() => {
-                Toast.showWithGravity('Estado cambiado', Toast.LONG, Toast.TOP)
+            }).then((res) => {
+                if (res.data.message == 'success') {
+                    Toast.showWithGravity('Estado cambiado', Toast.LONG, Toast.TOP)
+                }
             }).catch(() => {
                 Toast.showWithGravity('Se produjo un error al actualizar', Toast.LONG, Toast.TOP)
             })
         }
         if (number == 1) {
-            return firestore().collection('list').doc(`${item.id}`).update({
+            return api.post('/posts/status/update', {
+                postID: item.id,
                 statusText: 'Pendiente',
                 numberStatus: 1,
                 status: 'orange'
-            }).then(() => {
-                Toast.showWithGravity('Estado cambiado', Toast.LONG, Toast.TOP)
+            }).then((res) => {
+                if (res.data.message == 'success') {
+                    Toast.showWithGravity('Estado cambiado', Toast.LONG, Toast.TOP)
+                }
             }).catch(() => {
                 Toast.showWithGravity('Se produjo un error al actualizar', Toast.LONG, Toast.TOP)
             })
         }
         if (number == 0) {
-            return firestore().collection('list').doc(`${item.id}`).update({
+            api.post('/posts/status/update', {
+                postID: item.id,
                 statusText: 'Cancelado',
                 numberStatus: 0,
                 status: 'red'
-            }).then(() => {
-                Toast.showWithGravity('Estado cambiado', Toast.LONG, Toast.TOP)
+            }).then((res) => {
+                if (res.data.message == 'success') {
+                    Toast.showWithGravity('Estado cambiado', Toast.LONG, Toast.TOP)
+                }
             }).catch(() => {
                 Toast.showWithGravity('Se produjo un error al actualizar', Toast.LONG, Toast.TOP)
             })
@@ -302,7 +326,8 @@ const List: React.FC = () => {
     }
 
     function deleteListItem(item: LIST) {
-        if (item.email.toLowerCase() !== emailUser.toLowerCase()) {
+        console.log(item.userID, `----`, userID)
+        if (Number(item.userID) !== Number(userID)) {
             return Toast.showWithGravity('No tienes autorización para eliminar esta tarea', Toast.LONG, Toast.TOP)
         }
         setItemDelete(item);
@@ -310,8 +335,15 @@ const List: React.FC = () => {
     }
 
     function deleteItem() {
-        firestore().collection('list').doc(`${ItemDelete?.id}`).delete().then(() => {
-            Toast.showWithGravity('Tarea eliminada con éxito', Toast.LONG, Toast.TOP);
+        api.post('/posts/delete', {
+            postID: ItemDelete?.id
+        }).then(res => {
+            console.log(res.data)
+            if (res.data.message == 'success') {
+                Toast.showWithGravity('Tarea eliminada con éxito', Toast.LONG, Toast.TOP);
+                return setISVisibleModalDelete(false);
+            }
+            Toast.showWithGravity('Se produjo un error al eliminar la tarea', Toast.LONG, Toast.TOP);
             return setISVisibleModalDelete(false);
         }).catch(() => {
             Toast.showWithGravity('Se produjo un error al eliminar la tarea', Toast.LONG, Toast.TOP);
@@ -323,59 +355,16 @@ const List: React.FC = () => {
         velocityThreshold: 0.3,
         directionalOffsetThreshold: 50
     };
-    const configSWIPE2 = {
-        velocityThreshold: 0.3,
-        directionalOffsetThreshold: 30
-    };
 
-    function visibleMais(item: LIST) {
-        setItemView(item);
-        setISVisibleModalMAIS(true);
-    }
     function openModalAddComments(item: LIST) {
-        setIdPostComments(item.id)
+        setIdPostComments(String(item.id))
         setISVisibleModal4(true);
 
     }
 
-    function addCommentsTarea() {
-        if (comments.length == 0) {
-            return Toast.showWithGravity('Ingrese su comentario', Toast.LONG, Toast.TOP)
-        }
-        var chars = 'abcdefghijklmnopqrstuvwxyz0123456789'.split('');
-        var result = '';
-        for (var i = 0; i < 21; i++) {
-            var x = Math.floor(Math.random() * chars.length);
-            result += chars[x];
-        }
-        const ID = result;
-        const DATA = {
-            id: ID,
-            idPost: idPostComments,
-            comment: comments,
-            date: moment(new Date()).format('YYYY-MM-DD')
-        }
-        firestore().collection('comments').doc(`${ID}`).set(DATA).then(() => {
-            setISVisibleModal4(false);
-            setComments('')
-            return Toast.showWithGravity('Comentario hecho con éxito', Toast.LONG, Toast.TOP);
-        }).catch((e) => {
-            setISVisibleModal4(false);
-            setComments('')
-            console.log('error', e)
-            return Toast.showWithGravity('Ocurrio un error', Toast.LONG, Toast.TOP);
-        })
-    }
-    function deleteComments(id: string) {
-        firestore().collection('comments').doc(`${id}`).delete().then(() => {
-            return Toast.showWithGravity('Comentario eliminado con éxito', Toast.LONG, Toast.TOP);
-        }).catch(() => {
-            return Toast.showWithGravity('Error al eliminar el comentario', Toast.LONG, Toast.TOP);
-        })
-    }
     function handleVisibleMais(item: LIST) {
 
-        setInfoList(item.id)
+        setInfoList(String(item.id))
         navigation.navigate('InfoTarea')
     }
 
@@ -408,7 +397,7 @@ const List: React.FC = () => {
 
                                 <View style={styles.bodyContainerItem}>
                                     <View style={styles.containerEmail}>
-                                        <Text numberOfLines={1} style={[styles.textEmail]}>{item.email.toLowerCase()}</Text>
+                                        <Text numberOfLines={1} style={[styles.textEmail]}>{item.email}</Text>
                                     </View>
                                     <View style={styles.containerName}>
                                         <Text numberOfLines={1} style={styles.textName}>{item.title}</Text>
@@ -423,7 +412,7 @@ const List: React.FC = () => {
                                 </View>
                                 <Animated.View style={[styles.viewOpcacityItem]} >
                                     <Text style={styles.textEmail}>{item.dateAtual}</Text>
-                                    <Text style={styles.textEmail}>{item.dates}</Text>
+                                    <Text style={styles.textEmail}>{item.date}</Text>
 
                                     <SwitchSelector
                                         options={[
@@ -454,8 +443,8 @@ const List: React.FC = () => {
     return (
         <>
             <View style={{ backgroundColor: '#141414', width: '100%', height: getStatusBarHeight(true) }} />
-            <View style={[styles.header, emailUser.toLowerCase() !== 'medicalrtr@gmail.com' && { paddingLeft: width * 0.05, }]}>
-                {emailUser.toLowerCase() == 'medicalrtr@gmail.com' && <TouchableOpacity style={styles.ViewIconHeader} onPress={() => navigation.navigate('Users')} >
+            <View style={[styles.header, Number(userID) === 7 && { paddingLeft: width * 0.05, }]}>
+                {Number(userID) === 7 && <TouchableOpacity style={styles.ViewIconHeader} onPress={() => navigation.navigate('Users')} >
                     <Image resizeMode={"contain"} style={styles.iconHeader} source={require('../../assets/team.png')} />
                 </TouchableOpacity>}
                 <Text style={styles.textHeader}>Lista de Tareas</Text>
@@ -484,16 +473,18 @@ const List: React.FC = () => {
                 </View>
 
             </View>
+            {list.length === 0 ? <>
+                <View style={{ width: '100%', height: '8%' }} />
+                <ActivityIndicator size='large' color='#141414' /></> :
+                <FlatList
+                    style={{ flex: 1, backgroundColor: '#E5E5E5' }}
+                    data={searchText.length !== 0 ? list.filter(res => (String(res.title).toLowerCase().search(String(searchText).toLowerCase()) >= 0) || (String(res.description).toLowerCase().search(String(searchText).toLowerCase()) >= 0) || (String(res.date).toLowerCase().search(String(searchText).toLowerCase()) >= 0) || (String(res.email).toLowerCase().search(String(searchText).toLowerCase()) >= 0) || (String(res.name).toLowerCase().search(String(searchText).toLowerCase()) >= 0) || (String(res.statusText).toLowerCase().search(String(searchText).toLowerCase()) >= 0)) : list}
+                    showsVerticalScrollIndicator={false}
+                    ListFooterComponent={() => <View style={{ height: width * 0.5, width: '100%' }} />}
+                    renderItem={({ item }) => RenderItems(item)}
+                    keyExtractor={(item: LIST) => String(item.id)}
 
-            <FlatList
-                style={{ flex: 1, backgroundColor: '#E5E5E5' }}
-                data={searchText.length !== 0 ? list.filter(res => (res.title.toLowerCase().search(searchText.toLowerCase()) >= 0) || (res.description.toLowerCase().search(searchText.toLowerCase()) >= 0) || (res.dates.toLowerCase().search(searchText.toLowerCase()) >= 0) || (res.email.toLowerCase().search(searchText.toLowerCase()) >= 0) || (res.name.toLowerCase().search(searchText.toLowerCase()) >= 0) || (res.statusText.toLowerCase().search(searchText.toLowerCase()) >= 0)) : list}
-                showsVerticalScrollIndicator={false}
-                ListFooterComponent={() => <View style={{ height: width * 0.5, width: '100%' }} />}
-                renderItem={({ item }) => RenderItems(item)}
-                keyExtractor={(item: LIST) => String(item.id)}
-
-            />
+                />}
             <View>
                 <Dialog.Container visible={visibleDialog}>
                     <Dialog.Title>Cerrar sesión</Dialog.Title>
@@ -559,39 +550,6 @@ const List: React.FC = () => {
             </Modal>
 
 
-
-            <Modal
-                swipeDirection="down"
-                customBackdrop={
-                    <TouchableWithoutFeedback onPress={() => setISVisibleModal4(false)}>
-                        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.8)' }} />
-                    </TouchableWithoutFeedback>
-                }
-                isVisible={isVisibleModal4}
-                onBackButtonPress={() => setISVisibleModal4(false)}
-                onSwipeComplete={() => setISVisibleModal4(false)}>
-                <View style={styles.conatainerModal4}>
-                    <View style={[styles.containerModal4, { top: getStatusBarHeight(true) }]} >
-
-                        <TextInput
-                            style={styles.inputAddTitle}
-                            placeholder={'Comentario'}
-                            maxLength={265}
-                            value={comments}
-                            onChangeText={(e) => setComments(e)}
-                        />
-                        <View onTouchStart={addCommentsTarea} style={styles.submitList}>
-                            {loading ?
-                                <ActivityIndicator size={'large'} color='white' />
-                                :
-                                <Text style={styles.textLive}>Registrar esta comentario</Text>}
-                        </View>
-
-                    </View>
-                </View>
-            </Modal>
-
-
             <Modal
                 swipeDirection="down"
                 customBackdrop={
@@ -622,7 +580,7 @@ const List: React.FC = () => {
                                 </View>
                             </View>
                             <Animated.View style={[styles.viewOpcacityItem]} >
-                                <Text style={styles.textEmail}>{ItemDelete?.dates}</Text>
+                                <Text style={styles.textEmail}>{ItemDelete?.date}</Text>
                                 <SwitchSelector
                                     options={[
                                         { label: "C", value: "0", activeColor: 'red' },
@@ -738,7 +696,7 @@ const List: React.FC = () => {
                                 </View>
                             </View>
                             <Animated.View style={[styles.viewOpcacityItem]} >
-                                <Text numberOfLines={2} style={styles.textEmail2}>{ItemView?.dates}</Text>
+                                <Text numberOfLines={2} style={styles.textEmail2}>{ItemView?.date}</Text>
                                 <SwitchSelector
                                     options={[
                                         { label: "C", value: "0", activeColor: 'red' },

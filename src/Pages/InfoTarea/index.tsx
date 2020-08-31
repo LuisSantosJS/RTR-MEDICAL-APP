@@ -14,33 +14,38 @@ import moment from 'moment';
 import styles from './styles';
 import Modal from 'react-native-modal';
 import Dialog from "react-native-dialog";
+import io from "socket.io-client";
+import api from '../../Services/api';
 import { useNavigation } from '@react-navigation/native';
 import firestore from '@react-native-firebase/firestore';
 import Toast from 'react-native-simple-toast';
 import SwitchSelector from "react-native-switch-selector";
 import GestureRecognizer from 'react-native-swipe-gestures';
-import { useInfoList, useList, useEmailUser, useNameUser } from '../../Context/contextAuth';
+import { useInfoList, useUserID } from '../../Context/contextAuth';
 import { TextInput, FlatList } from 'react-native-gesture-handler';
 import { Dimensions } from 'react-native';
 import { getStatusBarHeight } from 'react-native-status-bar-height';
 const width = Dimensions.get("window").width;
 const height = Dimensions.get("window").height;
 interface LIST {
-    dates: string,
+    userID: string,
     description: string,
     email: string,
-    name: string,
     status: string,
+    name: string,
     title: string,
     statusText: string,
     id: string,
+    timestamp: string,
+    timestampTarea: string,
+    views: string,
     dateAtual: string,
-    numberStatus: number
+    date: string,
+    numberStatus: number,
 }
 
 interface LISTCOMMENTS {
     id: string,
-    idPost: string,
     comment: string,
     date: string,
     solit: boolean,
@@ -50,18 +55,18 @@ interface LISTCOMMENTS {
     numberStatus: number,
     statusText: string,
     status: string,
+    postID: number,
+    userID: number,
 }
 
 
 const InfoTarea: React.FC = () => {
     const { infoList, setInfoList } = useInfoList();
-    const { list, setList } = useList();
     const navigation = useNavigation();
+    const { userID } = useUserID();
     const [visibleDialog, setVisibleDialog] = useState<boolean>(false);
     const [toggleCheckBox, setToggleCheckBox] = useState<boolean>(false)
-    const { emailUser, setEmailUser } = useEmailUser();
-    const { nameUser, setNameUser } = useNameUser();
-    const item: LIST[] = list.filter(item => item.id == infoList);
+    const [item, setItem] = useState<LIST>();
     const [listComments, setListComments] = useState<LISTCOMMENTS[]>([]);
     const [comments, setComments] = useState<string>('');
     const [solicitud, setSolicitud] = useState<string>('');
@@ -70,63 +75,91 @@ const InfoTarea: React.FC = () => {
     const [isVisibleModal5, setISVisibleModal5] = useState<boolean>(false);
     const [ItemDelete, setItemDelete] = useState<LISTCOMMENTS | LIST>();
     const [isVisibleModalDelete, setISVisibleModalDelete] = useState<boolean>(false);
+    const socket = io("http://localhost:3000");
     const configSWIPE = {
         velocityThreshold: 0.3,
         directionalOffsetThreshold: 50
     };
+    useEffect(()=>{
+        api.get('/posts')
+    },[])
     useEffect(() => { }, [listComments])
+
+    useEffect(() => {
+        socket.on(`comment-${infoList}`, (res: any) => {
+            setListComments(res)
+        })
+    }, [])
 
 
 
     useEffect(() => {
-        firestore().collection('comments').onSnapshot(res => {
-            setListComments([]);
-            res.docs.forEach((e: any) => {
-                if (e.data().idPost == infoList) {
-                    setListComments(listComments => [...listComments, e.data()])
-                }
-            })
+
+        api.get(`/comments?postID=${infoList}`).then((res: any) => {
+            if (res.data.message == 'success') {
+                setListComments(res)
+            } else {
+                console.log(res.data)
+            }
         })
+        // firestore().collection('comments').onSnapshot(res => {
+
+        //     res.docs.forEach((e: any) => {
+        //         if (e.data().idPost == infoList) {
+        //             setListComments(listComments => [...listComments, e.data()])
+        //         }
+        //     })
+        // })
         return () => {
 
         }
     }, [])
     function updateTarefa(number: number) {
 
+
         if (number == 2) {
-            return firestore().collection('list').doc(`${item.map(item => item.id)}`).update({
+            return api.post('/posts/status/update', {
+                postID: item?.id,
                 statusText: 'Finalizado',
                 status: 'green',
                 numberStatus: 2,
-
-            }).then(() => {
-                Toast.showWithGravity('Estado cambiado', Toast.LONG, Toast.TOP)
+            }).then((res) => {
+                if (res.data.message == 'success') {
+                    Toast.showWithGravity('Estado cambiado', Toast.LONG, Toast.TOP)
+                }
             }).catch(() => {
                 Toast.showWithGravity('Se produjo un error al actualizar', Toast.LONG, Toast.TOP)
             })
         }
         if (number == 1) {
-            return firestore().collection('list').doc(`${item.map(item => item.id)}`).update({
+            return api.post('/posts/status/update', {
+                postID: item?.id,
                 statusText: 'Pendiente',
                 numberStatus: 1,
                 status: 'orange'
-            }).then(() => {
-                Toast.showWithGravity('Estado cambiado', Toast.LONG, Toast.TOP)
+            }).then((res) => {
+                if (res.data.message == 'success') {
+                    Toast.showWithGravity('Estado cambiado', Toast.LONG, Toast.TOP)
+                }
             }).catch(() => {
                 Toast.showWithGravity('Se produjo un error al actualizar', Toast.LONG, Toast.TOP)
             })
         }
         if (number == 0) {
-            return firestore().collection('list').doc(`${item.map(item => item.id)}`).update({
+            api.post('/posts/status/update', {
+                postID: item?.id,
                 statusText: 'Cancelado',
                 numberStatus: 0,
                 status: 'red'
-            }).then(() => {
-                Toast.showWithGravity('Estado cambiado', Toast.LONG, Toast.TOP)
+            }).then((res) => {
+                if (res.data.message == 'success') {
+                    Toast.showWithGravity('Estado cambiado', Toast.LONG, Toast.TOP)
+                }
             }).catch(() => {
                 Toast.showWithGravity('Se produjo un error al actualizar', Toast.LONG, Toast.TOP)
             })
         }
+
 
     }
     function openModalAddComments() {
@@ -141,40 +174,49 @@ const InfoTarea: React.FC = () => {
     function updateSolit(number: number, item: LISTCOMMENTS) {
 
         if (number == 2) {
-            return firestore().collection('comments').doc(`${item.id}`).update({
+            return api.post('/posts/status/update', {
+                postID: item.id,
                 statusText: 'Finalizado',
                 status: 'green',
                 numberStatus: 2,
-
-
-            }).then(() => {
-                Toast.showWithGravity('Estado cambiado', Toast.LONG, Toast.TOP)
+            }).then((res) => {
+                if (res.data.message == 'success') {
+                    Toast.showWithGravity('Estado cambiado', Toast.LONG, Toast.TOP)
+                }
             }).catch(() => {
                 Toast.showWithGravity('Se produjo un error al actualizar', Toast.LONG, Toast.TOP)
             })
         }
         if (number == 1) {
-            return firestore().collection('comments').doc(`${item.id}`).update({
+            return api.post('/posts/status/update', {
+                postID: item.id,
                 statusText: 'Pendiente',
                 numberStatus: 1,
                 status: 'orange'
-            }).then(() => {
-                Toast.showWithGravity('Estado cambiado', Toast.LONG, Toast.TOP)
+            }).then((res) => {
+                if (res.data.message == 'success') {
+                    Toast.showWithGravity('Estado cambiado', Toast.LONG, Toast.TOP)
+                }
             }).catch(() => {
                 Toast.showWithGravity('Se produjo un error al actualizar', Toast.LONG, Toast.TOP)
             })
         }
         if (number == 0) {
-            return firestore().collection('comments').doc(`${item.id}`).update({
+            api.post('/posts/status/update', {
+                postID: item.id,
                 statusText: 'Cancelado',
                 numberStatus: 0,
                 status: 'red'
-            }).then(() => {
-                Toast.showWithGravity('Estado cambiado', Toast.LONG, Toast.TOP)
+            }).then((res) => {
+                if (res.data.message == 'success') {
+                    Toast.showWithGravity('Estado cambiado', Toast.LONG, Toast.TOP)
+                }
             }).catch(() => {
                 Toast.showWithGravity('Se produjo un error al actualizar', Toast.LONG, Toast.TOP)
             })
         }
+
+
 
     }
 
@@ -187,20 +229,11 @@ const InfoTarea: React.FC = () => {
             return Toast.showWithGravity('Ingrese su solicitud', Toast.LONG, Toast.TOP)
         }
         setLoading(true)
-        var chars = 'abcdefghijklmnopqrstuvwxyz0123456789'.split('');
-        var result = '';
-        for (var i = 0; i < 21; i++) {
-            var x = Math.floor(Math.random() * chars.length);
-            result += chars[x];
-        }
-        const ID = result;
         const DATA = {
-            id: ID,
-            idPost: infoList,
+            userID: userID,
+            postID: infoList,
             comment: toggleCheckBox ? solicitud : comments,
-            nameUser: nameUser,
             color: toggleCheckBox ? 'blue' : '#808080',
-            email: emailUser,
             solit: toggleCheckBox ? true : false,
             date: moment(new Date()).format('YYYY-MM-DD'),
             numberStatus: 1,
@@ -208,33 +241,46 @@ const InfoTarea: React.FC = () => {
             status: 'orange',
 
         }
-
-        firestore().collection('comments').doc(`${ID}`).set(DATA).then(() => {
-            setISVisibleModal4(false);
-            setISVisibleModal5(false);
-            setComments('')
-            setSolicitud('')
-            setLoading(false)
-            setToggleCheckBox(false)
-            return Toast.showWithGravity('Comentario hecho con éxito', Toast.LONG, Toast.TOP);
-        }).catch((e) => {
-            setISVisibleModal4(false);
-            setISVisibleModal5(false);
-            setComments('')
-            setSolicitud('')
-            console.log('error', e)
-            setLoading(false)
-            setToggleCheckBox(false)
-            return Toast.showWithGravity('Ocurrio un error', Toast.LONG, Toast.TOP);
+        api.post('/comments/create', DATA).then(res => {
+            if (res.data.message == 'success') {
+                setISVisibleModal4(false);
+                setISVisibleModal5(false);
+                setComments('')
+                setSolicitud('')
+                setLoading(false)
+                setToggleCheckBox(false)
+                return Toast.showWithGravity('Comentario hecho con éxito', Toast.LONG, Toast.TOP);
+            } else {
+                setISVisibleModal4(false);
+                setISVisibleModal5(false);
+                setComments('')
+                setSolicitud('')
+                setLoading(false)
+                setToggleCheckBox(false)
+                return Toast.showWithGravity('Ocurrio un error', Toast.LONG, Toast.TOP);
+            }
         })
+
+
     }
     function deleteComments() {
         setVisibleDialog(false);
-        firestore().collection('comments').doc(`${ItemDelete?.id}`).delete().then(() => {
-            
-            return Toast.showWithGravity('Comentario eliminado con éxito', Toast.LONG, Toast.TOP);
+        api.post('/comments/delete', {
+            commentID: ItemDelete?.id,
+            postID: infoList
+        }).then(res => {
+            if (res.data.message == 'success') {
+                return Toast.showWithGravity('Comentario eliminado con éxito', Toast.LONG, Toast.TOP);
+            } else {
+                return Toast.showWithGravity('Error al eliminar el comentario', Toast.LONG, Toast.TOP);
+            }
+
         }).catch(() => {
             return Toast.showWithGravity('Error al eliminar el comentario', Toast.LONG, Toast.TOP);
+        })
+        firestore().collection('comments').doc(`${ItemDelete?.id}`).delete().then(() => {
+
+
         })
     }
 
@@ -263,7 +309,7 @@ const InfoTarea: React.FC = () => {
                                     <View style={styles.bodyContainerItem2}>
                                         <Text numberOfLines={1} style={[styles.textEmail]}>@{item.nameUser} {item.email.toLowerCase()}</Text>
                                         <TextInput
-                                            value={`${item.comment}`}
+                                            value={`${item?.comment}`}
                                             multiline={true}
                                             editable={Platform.OS === 'ios' ? false : true}
                                             textAlignVertical='top'
@@ -310,9 +356,9 @@ const InfoTarea: React.FC = () => {
                                 </TouchableWithoutFeedback>
 
                                 <View style={styles.bodyContainerItem3}>
-                                <Text numberOfLines={1} style={[styles.textEmail]}>@{item.nameUser} {item.email.toLowerCase()}</Text>
+                                    <Text numberOfLines={1} style={[styles.textEmail]}>@{item.nameUser} {item.email.toLowerCase()}</Text>
                                     <TextInput
-                                        value={`${item.comment}`}
+                                        value={`${item?.comment}`}
                                         multiline={true}
                                         editable={Platform.OS === 'ios' ? false : true}
                                         textAlignVertical='top'
@@ -342,74 +388,79 @@ const InfoTarea: React.FC = () => {
             </View>
 
             <View style={[styles.container]}>
-                <FlatList style={{ flex: 1, width: width }}
-                    data={listComments}
-                    showsVerticalScrollIndicator={false}
-                    ListHeaderComponent={() => <>
-                        <View style={[styles.containerList, { top: width * 0.05 }]}>
-                            <GestureRecognizer
-                                onSwipeRight={() => { }}
-                                config={configSWIPE}>
-                                <TouchableWithoutFeedback onPress={() => { }}>
-                                    <View style={[styles.itemContain]}>
-                                        <TouchableWithoutFeedback onPress={() => { }}>
-                                            <View style={[styles.borderColorStatus, { backgroundColor: String(item.map(item => item.status)), flexDirection: 'column-reverse', alignItems: 'center' }]} >
-                                            </View>
-                                        </TouchableWithoutFeedback>
+                {listComments.length === 0 ? <>
 
-                                        <View style={styles.bodyContainerItem}>
-                                            <View style={styles.containerEmail}>
-                                                <Text numberOfLines={1} style={[styles.textEmail]}>{item.map(item => item.email.toLowerCase())}</Text>
-                                            </View>
-                                            <View style={[styles.containerName]}>
-                                                <TextInput
-                                                    value={`${item.map(item => item.title.toLowerCase())}`}
-                                                    multiline={true}
-                                                    scrollEnabled
-                                                    editable={Platform.OS === 'ios' ? false : true}
-                                                    textAlignVertical='top'
-                                                    style={styles.textName} />
-                                            </View>
-                                            <View style={styles.containerDescrip}>
-                                                <TextInput
-                                                    value={`${item.map(item => item.description)}`}
-                                                    multiline={true}
-                                                    scrollEnabled
-                                                    editable={Platform.OS === 'ios' ? false : true}
-                                                    textAlignVertical='top'
-                                                    style={styles.textDesc} />
+                    <View style={{ width: '100%', height: '8%' }} />
+                    <ActivityIndicator size='large' color='#141414' /></> :
 
+                    <FlatList style={{ flex: 1, width: width }}
+                        data={listComments}
+                        showsVerticalScrollIndicator={false}
+                        ListHeaderComponent={() => <>
+                            <View style={[styles.containerList, { top: width * 0.05 }]}>
+                                <GestureRecognizer
+                                    onSwipeRight={() => { }}
+                                    config={configSWIPE}>
+                                    <TouchableWithoutFeedback onPress={() => { }}>
+                                        <View style={[styles.itemContain]}>
+                                            <TouchableWithoutFeedback onPress={() => { }}>
+                                                <View style={[styles.borderColorStatus, { backgroundColor: String(item?.status), flexDirection: 'column-reverse', alignItems: 'center' }]} >
+                                                </View>
+                                            </TouchableWithoutFeedback>
+
+                                            <View style={styles.bodyContainerItem}>
+                                                <View style={styles.containerEmail}>
+                                                    <Text numberOfLines={1} style={[styles.textEmail]}>{item?.email.toLowerCase()}</Text>
+                                                </View>
+                                                <View style={[styles.containerName]}>
+                                                    <TextInput
+                                                        value={`${item?.title.toLowerCase()}`}
+                                                        multiline={true}
+                                                        scrollEnabled
+                                                        editable={Platform.OS === 'ios' ? false : true}
+                                                        textAlignVertical='top'
+                                                        style={styles.textName} />
+                                                </View>
+                                                <View style={styles.containerDescrip}>
+                                                    <TextInput
+                                                        value={`${item?.description}`}
+                                                        multiline={true}
+                                                        scrollEnabled
+                                                        editable={Platform.OS === 'ios' ? false : true}
+                                                        textAlignVertical='top'
+                                                        style={styles.textDesc} />
+
+                                                </View>
                                             </View>
+                                            <Animated.View style={[styles.viewOpcacityItem]} >
+                                                <Text style={styles.textEmail}>{item?.dateAtual}</Text>
+                                                <Text style={styles.textEmail}>{item?.date}</Text>
+                                                <SwitchSelector
+                                                    options={[
+                                                        { label: "C", value: "0", activeColor: 'red' },
+                                                        { label: "P", value: "1", activeColor: 'orange' },
+                                                        { label: "F", value: "2", activeColor: 'green' },
+
+                                                    ]}
+                                                    buttonColor={String(item?.status)}
+                                                    initial={Number(item?.numberStatus)}
+                                                    onPress={(value: number) => updateTarefa(value)}
+                                                />
+                                                <Text style={styles.textEmail}>{item?.statusText}</Text>
+                                            </Animated.View>
                                         </View>
-                                        <Animated.View style={[styles.viewOpcacityItem]} >
-                                            <Text style={styles.textEmail}>{item.map(item => item.dateAtual)}</Text>
-                                            <Text style={styles.textEmail}>{item.map(item => item.dates)}</Text>
-                                            <SwitchSelector
-                                                options={[
-                                                    { label: "C", value: "0", activeColor: 'red' },
-                                                    { label: "P", value: "1", activeColor: 'orange' },
-                                                    { label: "F", value: "2", activeColor: 'green' },
+                                    </TouchableWithoutFeedback>
+                                </GestureRecognizer>
+                            </View>
+                            <View style={styles.separator} />
+                            <View style={styles.separator} />
+                        </>
 
-                                                ]}
-                                                buttonColor={String(item.map(item => item.status))}
-                                                initial={Number(item.map(item => item.numberStatus))}
-                                                onPress={(value: number) => updateTarefa(value)}
-                                            />
-                                            <Text style={styles.textEmail}>{item.map(item => item.statusText)}</Text>
-                                        </Animated.View>
-                                    </View>
-                                </TouchableWithoutFeedback>
-                            </GestureRecognizer>
-                        </View>
-                        <View style={styles.separator} />
-                        <View style={styles.separator} />
-                    </>
+                        }
+                        ListFooterComponent={() => <View style={{ width: '100%', height: width * 0.6 }} />}
+                        renderItem={({ item }) => RenderComments(item)}
 
-                    }
-                    ListFooterComponent={() => <View style={{ width: '100%', height: width * 0.6 }} />}
-                    renderItem={({ item }) => RenderComments(item)}
-
-                />
+                    />}
 
 
             </View >
