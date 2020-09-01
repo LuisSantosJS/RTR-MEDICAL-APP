@@ -252,6 +252,7 @@ const InfoTarea: React.FC = () => {
                 setSolicitud('')
                 setLoading(false)
                 setToggleCheckBox(false)
+                firestore().collection('comments').add(DATA).catch(e => console.log(e))
                 return Toast.showWithGravity('Comentario hecho con éxito', Toast.LONG, Toast.TOP);
             } else {
                 setISVisibleModal4(false);
