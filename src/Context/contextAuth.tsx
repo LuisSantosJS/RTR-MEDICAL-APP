@@ -4,7 +4,7 @@ import React, {
     useContext,
     useEffect
 } from 'react';
-import auth from '@react-native-firebase/auth';
+
 import io from "socket.io-client";
 import AsyncStorage from '@react-native-community/async-storage';
 import firestore from '@react-native-firebase/firestore';
@@ -65,7 +65,7 @@ const ProviderAuth: React.FC = ({ children }) => {
 
     const [userSaved, setUserSaved] = useState<boolean>(false);
     const [loading, setLoading] = useState<boolean>(true);
-    const socket = io("http://192.168.100.99:3000");
+    const socket = io("http://apimedicalrtr-com-co.umbler.net");
     const [infoList, setInfoList] = useState<string>('');
     const [userID, setUserID] = useState<string>('');
     const [emailUser, setEmailUser] = useState<string>('');

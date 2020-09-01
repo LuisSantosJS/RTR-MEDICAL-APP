@@ -79,7 +79,7 @@ const List: React.FC = () => {
     const [isVisibleModalDelete, setISVisibleModalDelete] = useState<boolean>(false);
     const [isVisibleModalMAIS, setISVisibleModalMAIS] = useState<boolean>(false);
     const [searchText, setSearchText] = useState<string>('');
-    const socket = io("http://192.168.100.99:3000");
+    const socket = io("http://apimedicalrtr-com-co.umbler.net");
     const [idPostComments, setIdPostComments] = useState<string>('');
     // useEffect(() => {
     //     api.get('/posts').then(res=>{

@@ -49,7 +49,7 @@ const Users: React.FC = () => {
     const nameInputRef = useRef().current;
     const [password, setPassword] = useState<string>('');
     const { setUserSaved } = useSavedUser();
-    const socket = io("http://192.168.100.99:3000");
+    const socket = io("http://apimedicalrtr-com-co.umbler.net");
     const [users, setUsers] = useState<USERS[]>([]);
 
     function handleLogin2() {

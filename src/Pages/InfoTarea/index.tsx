@@ -79,7 +79,7 @@ const InfoTarea: React.FC = () => {
     const [isVisibleModal5, setISVisibleModal5] = useState<boolean>(false);
     const [ItemDelete, setItemDelete] = useState<LISTCOMMENTS | LIST>();
     const [isVisibleModalDelete, setISVisibleModalDelete] = useState<boolean>(false);
-    const socket = io("http://192.168.100.99:3000");
+    const socket = io("http://apimedicalrtr-com-co.umbler.net");
     const configSWIPE = {
         velocityThreshold: 0.3,
         directionalOffsetThreshold: 50
