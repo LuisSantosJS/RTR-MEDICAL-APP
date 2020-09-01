@@ -28,7 +28,9 @@ import { useNavigation } from '@react-navigation/native';
 import Dialog from "react-native-dialog";
 import GestureRecognizer from 'react-native-swipe-gestures';
 import { getStatusBarHeight } from 'react-native-status-bar-height';
-import { useSavedUser, useInfoList, useUserID } from '../../Context/contextAuth';
+import { useSavedUser, useUserID } from '../../Context/contextAuth';
+import { useListUnique } from '../../Context/contextList';
+import AsyncStorage from '@react-native-community/async-storage';
 
 
 interface LIST {
@@ -56,7 +58,7 @@ const List: React.FC = () => {
     const navigation = useNavigation();
     const [visibleDialog, setVisibleDialog] = useState<boolean>(false);
     const { userID } = useUserID();
-    const { infoList, setInfoList } = useInfoList();
+    const { listUnique, setListUnique } = useListUnique();
     const [enabledStatesItems, setEnabledStatesItems] = useState<boolean>(false);
     const { userSaved, setUserSaved } = useSavedUser();
     const [comments, setComments] = useState<string>('');
@@ -77,7 +79,7 @@ const List: React.FC = () => {
     const [isVisibleModalDelete, setISVisibleModalDelete] = useState<boolean>(false);
     const [isVisibleModalMAIS, setISVisibleModalMAIS] = useState<boolean>(false);
     const [searchText, setSearchText] = useState<string>('');
-    const socket = io("http://localhost:3000");
+    const socket = io("http://192.168.100.99:3000");
     const [idPostComments, setIdPostComments] = useState<string>('');
     // useEffect(() => {
     //     api.get('/posts').then(res=>{
@@ -209,10 +211,14 @@ const List: React.FC = () => {
 
 
 
-    function exitAccount() {
-        setVisibleDialog(false);
-        setInterval(() => { }, 1000);
-        setUserSaved(false);
+    async function exitAccount() {
+        try {
+            AsyncStorage.removeItem('@userID')
+            setVisibleDialog(false);
+            setUserSaved(false);
+        } catch (e) {
+            console.log(e)
+        }
     }
 
 
@@ -356,15 +362,14 @@ const List: React.FC = () => {
         directionalOffsetThreshold: 50
     };
 
-    function openModalAddComments(item: LIST) {
-        setIdPostComments(String(item.id))
-        setISVisibleModal4(true);
+    // function openModalAddComments(item: LIST) {
+    //     setIdPostComments(String(item.id))
+    //     setISVisibleModal4(true);
 
-    }
+    // }
 
     function handleVisibleMais(item: LIST) {
-
-        setInfoList(String(item.id))
+        setListUnique(item);
         navigation.navigate('InfoTarea')
     }
 
@@ -389,7 +394,7 @@ const List: React.FC = () => {
                         config={configSWIPE}>
                         <TouchableWithoutFeedback onPress={() => handleVisibleMais(item)}>
                             <View style={[styles.itemContain]}>
-                                <TouchableWithoutFeedback onPress={() => openModalAddComments(item)}>
+                                <TouchableWithoutFeedback onPress={() => { }}>
                                     <View style={[styles.borderColorStatus, { backgroundColor: item.status, flexDirection: 'column-reverse', alignItems: 'center' }]} >
 
                                     </View>

@@ -4,9 +4,11 @@ import { createStackNavigator } from '@react-navigation/stack';
 import List from '../Pages/List';
 import Users from '../Pages/Users';
 import InfoTarea from '../Pages/InfoTarea';
+import Provider from '../Context/contextList'
 const MainRouter: React.FC = () => {
     const Stack = createStackNavigator();
     return (
+        <Provider>
         <NavigationContainer>
             <Stack.Navigator>
                 <Stack.Screen
@@ -29,6 +31,7 @@ const MainRouter: React.FC = () => {
                     }} />
             </Stack.Navigator>
         </NavigationContainer>
+        </Provider>
     );
 }
 export default MainRouter;

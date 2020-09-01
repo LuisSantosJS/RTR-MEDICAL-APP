@@ -15,6 +15,7 @@ import {
 import api from '../../Services/api';
 import Modal from 'react-native-modal';
 import io from "socket.io-client";
+import AsyncStorage from '@react-native-community/async-storage';
 import Toast from 'react-native-simple-toast';
 import { useSavedUser } from '../../Context/contextAuth';
 import Dialog from "react-native-dialog";
@@ -48,7 +49,7 @@ const Users: React.FC = () => {
     const nameInputRef = useRef().current;
     const [password, setPassword] = useState<string>('');
     const { setUserSaved } = useSavedUser();
-    const socket = io("http://localhost:3000");
+    const socket = io("http://192.168.100.99:3000");
     const [users, setUsers] = useState<USERS[]>([]);
 
     function handleLogin2() {
@@ -140,11 +141,15 @@ const Users: React.FC = () => {
 
 
 
-    function exitAccount() {
-        setVisibleDialog(false);
-
-        setUserSaved(false);
-
+  
+    async function exitAccount() {
+        try{
+            AsyncStorage.removeItem('@userID')
+            setVisibleDialog(false);
+            setUserSaved(false);
+        }catch(e){
+            console.log(e)
+        }
     }
 
     function removeUser() {

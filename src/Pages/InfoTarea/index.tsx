@@ -21,7 +21,8 @@ import firestore from '@react-native-firebase/firestore';
 import Toast from 'react-native-simple-toast';
 import SwitchSelector from "react-native-switch-selector";
 import GestureRecognizer from 'react-native-swipe-gestures';
-import { useInfoList, useUserID } from '../../Context/contextAuth';
+import { useUserID } from '../../Context/contextAuth';
+import { useListUnique } from '../../Context/contextList';
 import { TextInput, FlatList } from 'react-native-gesture-handler';
 import { Dimensions } from 'react-native';
 import { getStatusBarHeight } from 'react-native-status-bar-height';
@@ -61,12 +62,13 @@ interface LISTCOMMENTS {
 
 
 const InfoTarea: React.FC = () => {
-    const { infoList, setInfoList } = useInfoList();
+
+
     const navigation = useNavigation();
     const { userID } = useUserID();
+    const { listUnique, setListUnique } = useListUnique();
     const [visibleDialog, setVisibleDialog] = useState<boolean>(false);
     const [toggleCheckBox, setToggleCheckBox] = useState<boolean>(false)
-    const [item, setItem] = useState<LIST>();
     const [listComments, setListComments] = useState<LISTCOMMENTS[]>([]);
     const [comments, setComments] = useState<string>('');
     const [solicitud, setSolicitud] = useState<string>('');
@@ -75,32 +77,30 @@ const InfoTarea: React.FC = () => {
     const [isVisibleModal5, setISVisibleModal5] = useState<boolean>(false);
     const [ItemDelete, setItemDelete] = useState<LISTCOMMENTS | LIST>();
     const [isVisibleModalDelete, setISVisibleModalDelete] = useState<boolean>(false);
-    const socket = io("http://localhost:3000");
+    const socket = io("http://192.168.100.99:3000");
     const configSWIPE = {
         velocityThreshold: 0.3,
         directionalOffsetThreshold: 50
     };
-    useEffect(()=>{
-        api.get('/posts')
-    },[])
+    useEffect(() => {
+
+    }, [])
     useEffect(() => { }, [listComments])
 
-    useEffect(() => {
-        socket.on(`comment-${infoList}`, (res: any) => {
-            setListComments(res)
-        })
-    }, [])
-
-
 
     useEffect(() => {
 
-        api.get(`/comments?postID=${infoList}`).then((res: any) => {
+        api.get(`/comments?postID=${Number(listUnique.id)}`).then((res: any) => {
             if (res.data.message == 'success') {
-                setListComments(res)
+                setListComments(res.data.data)
             } else {
                 console.log(res.data)
             }
+        })
+
+        socket.on(`comment-${Number(listUnique.id)}`, (res: any) => {
+            setListComments(res);
+            // console.log(res)
         })
         // firestore().collection('comments').onSnapshot(res => {
 
@@ -119,7 +119,7 @@ const InfoTarea: React.FC = () => {
 
         if (number == 2) {
             return api.post('/posts/status/update', {
-                postID: item?.id,
+                postID: listUnique?.id,
                 statusText: 'Finalizado',
                 status: 'green',
                 numberStatus: 2,
@@ -133,7 +133,7 @@ const InfoTarea: React.FC = () => {
         }
         if (number == 1) {
             return api.post('/posts/status/update', {
-                postID: item?.id,
+                postID: listUnique?.id,
                 statusText: 'Pendiente',
                 numberStatus: 1,
                 status: 'orange'
@@ -147,7 +147,7 @@ const InfoTarea: React.FC = () => {
         }
         if (number == 0) {
             api.post('/posts/status/update', {
-                postID: item?.id,
+                postID: listUnique?.id,
                 statusText: 'Cancelado',
                 numberStatus: 0,
                 status: 'red'
@@ -174,8 +174,9 @@ const InfoTarea: React.FC = () => {
     function updateSolit(number: number, item: LISTCOMMENTS) {
 
         if (number == 2) {
-            return api.post('/posts/status/update', {
-                postID: item.id,
+            return api.post('/comments/update', {
+                postID: listUnique.id,
+                commentID: item.id,
                 statusText: 'Finalizado',
                 status: 'green',
                 numberStatus: 2,
@@ -188,8 +189,9 @@ const InfoTarea: React.FC = () => {
             })
         }
         if (number == 1) {
-            return api.post('/posts/status/update', {
-                postID: item.id,
+            return api.post('/comments/update', {
+                postID: listUnique.id,
+                commentID: item.id,
                 statusText: 'Pendiente',
                 numberStatus: 1,
                 status: 'orange'
@@ -202,8 +204,9 @@ const InfoTarea: React.FC = () => {
             })
         }
         if (number == 0) {
-            api.post('/posts/status/update', {
-                postID: item.id,
+            return api.post('/comments/update', {
+                postID: listUnique.id,
+                commentID: item.id,
                 statusText: 'Cancelado',
                 numberStatus: 0,
                 status: 'red'
@@ -231,7 +234,7 @@ const InfoTarea: React.FC = () => {
         setLoading(true)
         const DATA = {
             userID: userID,
-            postID: infoList,
+            postID: listUnique.id,
             comment: toggleCheckBox ? solicitud : comments,
             color: toggleCheckBox ? 'blue' : '#808080',
             solit: toggleCheckBox ? true : false,
@@ -267,7 +270,7 @@ const InfoTarea: React.FC = () => {
         setVisibleDialog(false);
         api.post('/comments/delete', {
             commentID: ItemDelete?.id,
-            postID: infoList
+            postID: listUnique.id
         }).then(res => {
             if (res.data.message == 'success') {
                 return Toast.showWithGravity('Comentario eliminado con éxito', Toast.LONG, Toast.TOP);
@@ -307,7 +310,7 @@ const InfoTarea: React.FC = () => {
                                     </TouchableWithoutFeedback>
 
                                     <View style={styles.bodyContainerItem2}>
-                                        <Text numberOfLines={1} style={[styles.textEmail]}>@{item.nameUser} {item.email.toLowerCase()}</Text>
+                                        <Text numberOfLines={1} style={[styles.textEmail]}>@{item.nameUser} {item.email}</Text>
                                         <TextInput
                                             value={`${item?.comment}`}
                                             multiline={true}
@@ -326,6 +329,7 @@ const InfoTarea: React.FC = () => {
                                                 { label: "F", value: "2", activeColor: 'green' },
 
                                             ]}
+
                                             buttonColor={item.status}
                                             initial={Number(item.numberStatus)}
                                             onPress={(value: number) => updateSolit(value, item)}
@@ -340,6 +344,7 @@ const InfoTarea: React.FC = () => {
                 </View>
             )
         }
+
         return (
             <View key={item.id}>
                 <View style={styles.separator} />
@@ -356,7 +361,7 @@ const InfoTarea: React.FC = () => {
                                 </TouchableWithoutFeedback>
 
                                 <View style={styles.bodyContainerItem3}>
-                                    <Text numberOfLines={1} style={[styles.textEmail]}>@{item.nameUser} {item.email.toLowerCase()}</Text>
+                                    <Text numberOfLines={1} style={[styles.textEmail]}>@{item.nameUser} {item.email}</Text>
                                     <TextInput
                                         value={`${item?.comment}`}
                                         multiline={true}
@@ -374,7 +379,6 @@ const InfoTarea: React.FC = () => {
             </View>
         )
     }
-
     return (
         <>
             <View style={{ backgroundColor: '#141414', width: '100%', height: getStatusBarHeight(true) }} />
@@ -388,79 +392,76 @@ const InfoTarea: React.FC = () => {
             </View>
 
             <View style={[styles.container]}>
-                {listComments.length === 0 ? <>
 
-                    <View style={{ width: '100%', height: '8%' }} />
-                    <ActivityIndicator size='large' color='#141414' /></> :
-
-                    <FlatList style={{ flex: 1, width: width }}
-                        data={listComments}
-                        showsVerticalScrollIndicator={false}
-                        ListHeaderComponent={() => <>
-                            <View style={[styles.containerList, { top: width * 0.05 }]}>
-                                <GestureRecognizer
-                                    onSwipeRight={() => { }}
-                                    config={configSWIPE}>
-                                    <TouchableWithoutFeedback onPress={() => { }}>
-                                        <View style={[styles.itemContain]}>
-                                            <TouchableWithoutFeedback onPress={() => { }}>
-                                                <View style={[styles.borderColorStatus, { backgroundColor: String(item?.status), flexDirection: 'column-reverse', alignItems: 'center' }]} >
-                                                </View>
-                                            </TouchableWithoutFeedback>
-
-                                            <View style={styles.bodyContainerItem}>
-                                                <View style={styles.containerEmail}>
-                                                    <Text numberOfLines={1} style={[styles.textEmail]}>{item?.email.toLowerCase()}</Text>
-                                                </View>
-                                                <View style={[styles.containerName]}>
-                                                    <TextInput
-                                                        value={`${item?.title.toLowerCase()}`}
-                                                        multiline={true}
-                                                        scrollEnabled
-                                                        editable={Platform.OS === 'ios' ? false : true}
-                                                        textAlignVertical='top'
-                                                        style={styles.textName} />
-                                                </View>
-                                                <View style={styles.containerDescrip}>
-                                                    <TextInput
-                                                        value={`${item?.description}`}
-                                                        multiline={true}
-                                                        scrollEnabled
-                                                        editable={Platform.OS === 'ios' ? false : true}
-                                                        textAlignVertical='top'
-                                                        style={styles.textDesc} />
-
-                                                </View>
+                <FlatList style={{ flex: 1, width: width }}
+                    data={listComments}
+                    showsVerticalScrollIndicator={false}
+                    ListHeaderComponent={() => <>
+                        <View style={[styles.containerList, { top: width * 0.05 }]}>
+                            <GestureRecognizer
+                                onSwipeRight={() => { }}
+                                config={configSWIPE}>
+                                <TouchableWithoutFeedback onPress={() => { }}>
+                                    <View style={[styles.itemContain]}>
+                                        <TouchableWithoutFeedback onPress={() => { }}>
+                                            <View style={[styles.borderColorStatus, { backgroundColor: String(listUnique?.status), flexDirection: 'column-reverse', alignItems: 'center' }]} >
                                             </View>
-                                            <Animated.View style={[styles.viewOpcacityItem]} >
-                                                <Text style={styles.textEmail}>{item?.dateAtual}</Text>
-                                                <Text style={styles.textEmail}>{item?.date}</Text>
-                                                <SwitchSelector
-                                                    options={[
-                                                        { label: "C", value: "0", activeColor: 'red' },
-                                                        { label: "P", value: "1", activeColor: 'orange' },
-                                                        { label: "F", value: "2", activeColor: 'green' },
+                                        </TouchableWithoutFeedback>
 
-                                                    ]}
-                                                    buttonColor={String(item?.status)}
-                                                    initial={Number(item?.numberStatus)}
-                                                    onPress={(value: number) => updateTarefa(value)}
-                                                />
-                                                <Text style={styles.textEmail}>{item?.statusText}</Text>
-                                            </Animated.View>
+                                        <View style={styles.bodyContainerItem}>
+                                            <View style={styles.containerEmail}>
+                                                <Text numberOfLines={1} style={[styles.textEmail]}>{listUnique?.email.toLowerCase()}</Text>
+                                            </View>
+                                            <View style={[styles.containerName]}>
+                                                <TextInput
+                                                    value={`${listUnique?.title.toLowerCase()}`}
+                                                    multiline={true}
+                                                    scrollEnabled
+                                                    editable={Platform.OS === 'ios' ? false : true}
+                                                    textAlignVertical='top'
+                                                    style={styles.textName} />
+                                            </View>
+                                            <View style={styles.containerDescrip}>
+                                                <TextInput
+                                                    value={`${listUnique?.description}`}
+                                                    multiline={true}
+                                                    scrollEnabled
+                                                    editable={Platform.OS === 'ios' ? false : true}
+                                                    textAlignVertical='top'
+                                                    style={styles.textDesc} />
+
+                                            </View>
                                         </View>
-                                    </TouchableWithoutFeedback>
-                                </GestureRecognizer>
-                            </View>
-                            <View style={styles.separator} />
-                            <View style={styles.separator} />
-                        </>
+                                        <Animated.View style={[styles.viewOpcacityItem]} >
+                                            <Text style={styles.textEmail}>{listUnique?.dateAtual}</Text>
+                                            <Text style={styles.textEmail}>{listUnique?.date}</Text>
+                                            <SwitchSelector
+                                                options={[
+                                                    { label: "C", value: "0", activeColor: 'red' },
+                                                    { label: "P", value: "1", activeColor: 'orange' },
+                                                    { label: "F", value: "2", activeColor: 'green' },
 
-                        }
-                        ListFooterComponent={() => <View style={{ width: '100%', height: width * 0.6 }} />}
-                        renderItem={({ item }) => RenderComments(item)}
+                                                ]}
+                                                disabled
+                                                buttonColor={String(listUnique?.status)}
+                                                initial={Number(listUnique?.numberStatus)}
+                                                onPress={(value: number) => updateTarefa(value)}
+                                            />
+                                            <Text style={styles.textEmail}>{listUnique?.statusText}</Text>
+                                        </Animated.View>
+                                    </View>
+                                </TouchableWithoutFeedback>
+                            </GestureRecognizer>
+                        </View>
+                        <View style={styles.separator} />
+                        <View style={styles.separator} />
+                    </>
 
-                    />}
+                    }
+                    ListFooterComponent={() => <View style={{ width: '100%', height: width * 0.6 }} />}
+                    renderItem={({ item }) => RenderComments(item)}
+
+                />
 
 
             </View >

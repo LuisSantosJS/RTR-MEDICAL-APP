@@ -61,7 +61,7 @@ const ProviderAuth: React.FC = ({ children }) => {
 
     const [userSaved, setUserSaved] = useState<boolean>(false);
     const [loading, setLoading] = useState<boolean>(true);
-    const socket = io("http://localhost:3000");
+    const socket = io("http://192.168.100.99:3000");
     const [infoList, setInfoList] = useState<string>('');
     const [userID, setUserID] = useState<string>('');
 
@@ -253,7 +253,8 @@ const ProviderAuth: React.FC = ({ children }) => {
 
     function loadInfo(value: string) {
         api.get(`/users/unique?userID=${value}`).then(res => {
-            if (res.data.disabled === 1) {
+            console.log(res.data.data.disabled)
+            if (Boolean(res.data.data.disabled) === true) {
                 setUserSaved(false);
                 setLoading(false);
                 // setNameUser('');
@@ -272,6 +273,8 @@ const ProviderAuth: React.FC = ({ children }) => {
             if (res.disabled == true) {
                 setUserSaved(false);
                 Toast.showWithGravity('Este usuario ha sido deshabilitado', Toast.LONG, Toast.TOP);
+            }else{
+                setUserSaved(true);
             }
         })
 
