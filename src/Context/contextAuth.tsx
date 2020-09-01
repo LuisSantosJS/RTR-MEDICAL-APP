@@ -42,6 +42,8 @@ type ContextType = {
     setInfoList: (value: string) => void;
     userID: string;
     setUserID: (value: string) => void;
+    emailUser: string;
+    setEmailUser: (value: string) => void;
 };
 
 const ContextApp = createContext<ContextType>({
@@ -53,6 +55,8 @@ const ContextApp = createContext<ContextType>({
     setInfoList: (value: string) => { },
     userID: '',
     setUserID: (value: string) => { },
+    emailUser: '',
+    setEmailUser: (value: string) => { },
 
 });
 
@@ -64,6 +68,7 @@ const ProviderAuth: React.FC = ({ children }) => {
     const socket = io("http://192.168.100.99:3000");
     const [infoList, setInfoList] = useState<string>('');
     const [userID, setUserID] = useState<string>('');
+    const [emailUser, setEmailUser] = useState<string>('');
 
 
     useEffect(() => {
@@ -258,12 +263,13 @@ const ProviderAuth: React.FC = ({ children }) => {
                 setUserSaved(false);
                 setLoading(false);
                 // setNameUser('');
-                // setEmailUser('');
+
                 Toast.showWithGravity('Este usuario ha sido deshabilitado', Toast.LONG, Toast.TOP);
             } else {
                 // setEmailUser(String(res.data.email));
                 // setNameUser(String(res.data.name));
                 // // setUserID(String(res.data.id));
+                setEmailUser(String(res.data.data.email));
                 setUserSaved(true);
                 setLoading(false);
             }
@@ -273,7 +279,7 @@ const ProviderAuth: React.FC = ({ children }) => {
             if (res.disabled == true) {
                 setUserSaved(false);
                 Toast.showWithGravity('Este usuario ha sido deshabilitado', Toast.LONG, Toast.TOP);
-            }else{
+            } else {
                 setUserSaved(true);
             }
         })
@@ -295,7 +301,8 @@ const ProviderAuth: React.FC = ({ children }) => {
             userSaved, setUserSaved,
             loading, setLoading,
             infoList, setInfoList,
-            userID, setUserID
+            userID, setUserID,
+            emailUser, setEmailUser
         }}>
             {children}
         </ContextApp.Provider>
@@ -328,6 +335,12 @@ export function useUserID() {
     const { userID, setUserID } = infoUser;
     return { userID, setUserID };
 }
+export function useEmailUser() {
+    const infoUser: ContextType = useContext(ContextApp);
+    const { emailUser, setEmailUser } = infoUser;
+    return { emailUser, setEmailUser };
+}
+
 
 
 

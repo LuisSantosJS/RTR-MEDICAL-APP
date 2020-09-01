@@ -4,6 +4,7 @@ import {
     ScrollView,
     TouchableWithoutFeedback,
     Image,
+    FlatList,
     Platform,
     ActivityIndicator,
     TouchableOpacity,
@@ -21,9 +22,9 @@ import firestore from '@react-native-firebase/firestore';
 import Toast from 'react-native-simple-toast';
 import SwitchSelector from "react-native-switch-selector";
 import GestureRecognizer from 'react-native-swipe-gestures';
-import { useUserID } from '../../Context/contextAuth';
+import { useUserID, useEmailUser } from '../../Context/contextAuth';
 import { useListUnique } from '../../Context/contextList';
-import { TextInput, FlatList } from 'react-native-gesture-handler';
+import { TextInput } from 'react-native-gesture-handler';
 import { Dimensions } from 'react-native';
 import { getStatusBarHeight } from 'react-native-status-bar-height';
 const width = Dimensions.get("window").width;
@@ -66,6 +67,7 @@ const InfoTarea: React.FC = () => {
 
     const navigation = useNavigation();
     const { userID } = useUserID();
+    const { emailUser } = useEmailUser();
     const { listUnique, setListUnique } = useListUnique();
     const [visibleDialog, setVisibleDialog] = useState<boolean>(false);
     const [toggleCheckBox, setToggleCheckBox] = useState<boolean>(false)
@@ -83,7 +85,14 @@ const InfoTarea: React.FC = () => {
         directionalOffsetThreshold: 50
     };
     useEffect(() => {
-
+        api.post('/posts/users/view', {
+            userEmail: String(emailUser),
+            postID: Number(listUnique.id)
+        }).then(res=>{
+            if(res.data.message !== 'success'){
+              Toast.showWithGravity('Se produjo un error', Toast.LONG, Toast.TOP)
+            }
+        })
     }, [])
     useEffect(() => { }, [listComments])
 

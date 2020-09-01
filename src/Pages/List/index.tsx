@@ -23,12 +23,11 @@ import io from "socket.io-client";
 import Modal from 'react-native-modal';
 import api from '../../Services/api';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import auth from '@react-native-firebase/auth';
 import { useNavigation } from '@react-navigation/native';
 import Dialog from "react-native-dialog";
 import GestureRecognizer from 'react-native-swipe-gestures';
 import { getStatusBarHeight } from 'react-native-status-bar-height';
-import { useSavedUser, useUserID } from '../../Context/contextAuth';
+import { useSavedUser, useUserID, useEmailUser } from '../../Context/contextAuth';
 import { useListUnique } from '../../Context/contextList';
 import AsyncStorage from '@react-native-community/async-storage';
 
@@ -58,6 +57,7 @@ const List: React.FC = () => {
     const navigation = useNavigation();
     const [visibleDialog, setVisibleDialog] = useState<boolean>(false);
     const { userID } = useUserID();
+    const { emailUser } = useEmailUser();
     const { listUnique, setListUnique } = useListUnique();
     const [enabledStatesItems, setEnabledStatesItems] = useState<boolean>(false);
     const { userSaved, setUserSaved } = useSavedUser();
@@ -381,9 +381,21 @@ const List: React.FC = () => {
     //     return false;
     // }
 
+    function getStatusView(views: string) {
+        if (Number(userID) === 0) {
+            return false;
+        }
+        const splitArray = views.split(',');
+        console.log('splitArray', splitArray)
+        const search = splitArray.indexOf(String(emailUser));
+        // console.log('search', search)
+        if (search >= 0) {
+            return true
+        }
+        return false
+    }
 
     function RenderItems(item: LIST) {
-
         return (
             <>
                 <View style={styles.separator} />
@@ -396,7 +408,8 @@ const List: React.FC = () => {
                             <View style={[styles.itemContain]}>
                                 <TouchableWithoutFeedback onPress={() => { }}>
                                     <View style={[styles.borderColorStatus, { backgroundColor: item.status, flexDirection: 'column-reverse', alignItems: 'center' }]} >
-
+                                        {!getStatusView(item.views) &&
+                                            <Image source={require('../../assets/alert.png')} style={{ width: width * 0.08, height: width * 0.08 }} resizeMode='contain' />}
                                     </View>
                                 </TouchableWithoutFeedback>
 
