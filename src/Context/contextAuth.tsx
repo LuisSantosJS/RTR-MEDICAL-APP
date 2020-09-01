@@ -72,102 +72,102 @@ const ProviderAuth: React.FC = ({ children }) => {
 
 
     useEffect(() => {
-        // function getIDUSEr(name: string) {
-        //     if (name === 'Stella') {
-        //         return 1
-        //     }
-        //     if (name === 'Jorge') {
-        //         return 2
-        //     }
-        //     if (name === 'Wilson') {
-        //         return 3
-        //     }
-        //     if (name === 'Yeison') {
-        //         return 4
-        //     }
-        //     if (name === 'Henry') {
-        //         return 5
-        //     }
-        //     if (name === 'Luis') {
-        //         return 6
-        //     }
-        //     if (name === 'Admin') {
-        //         return 7
-        //     }
-        //     if (name === 'Sandro') {
-        //         return 8
-        //     }
-        //     if (name === 'Juliana Álvarez') {
-        //         return 9
-        //     }
-        //     if (name === 'Ruben') {
-        //         return 10
-        //     }
-        //     if (name === 'Juliana') {
-        //         return 11
-        //     }
-        //     if (name === 'Jorge') {
-        //         return 12
-        //     }
-        //     if (name === 'Martha') {
-        //         return 13
-        //     }
-        //     if (name === 'Fernando') {
-        //         return 14
-        //     }
-        //     if (name === 'Sofia') {
-        //         return 15
-        //     }
+        function getIDUSEr(name: string) {
+            if (name === 'Stella') {
+                return 1
+            }
+            if (name === 'Jorge') {
+                return 2
+            }
+            if (name === 'Wilson') {
+                return 3
+            }
+            if (name === 'Yeison') {
+                return 4
+            }
+            if (name === 'Henry') {
+                return 5
+            }
+            if (name === 'Luis') {
+                return 6
+            }
+            if (name === 'Admin') {
+                return 7
+            }
+            if (name === 'Sandro') {
+                return 8
+            }
+            if (name === 'Juliana Álvarez') {
+                return 9
+            }
+            if (name === 'Ruben') {
+                return 10
+            }
+            if (name === 'Juliana') {
+                return 11
+            }
+            if (name === 'Jorge') {
+                return 12
+            }
+            if (name === 'Martha') {
+                return 13
+            }
+            if (name === 'Fernando') {
+                return 14
+            }
+            if (name === 'Sofia') {
+                return 15
+            }
 
-        // }
-        // firestore().collection('list').get().then((res) => {
-        //     res.docs.forEach((e, index) => {
-        //         const a = e.data()
-        //         const DATA = {
-        //             userID: getIDUSEr(a.name),
-        //             numberStatus: a.numberStatus,
-        //             status: a.status,
-        //             timestamp: a.timestamp,
-        //             timestampTarea: a.timestampTarea,
-        //             description: a.description,
-        //             date: a.dates,
-        //             dateAtual: a.dateAtual == null ? a.dates : a.dateAtual,
-        //             title: a.title
-        //         }
-        //         console.log(index)
-        //         firestore().collection('comments').where('idPost', '==', a.id).get().then(res => {
-        //             res.docs.forEach(e => {
-        //                 const b = e.data();
-        //                 const DATACOMMENT = {
-        //                     userID: getIDUSEr(b.nameUser),
-        //                     postID: index,
-        //                     color: b.color,
-        //                     comment: b.comment,
-        //                     date: b.date,
-        //                     numberStatus: b.numberStatus,
-        //                     solit: b.solit,
-        //                     status: b.status,
-        //                     statusText: b.statusText
-        //                 }
+        }
+        firestore().collection('list').get().then((res) => {
+            res.docs.forEach((e, index) => {
+                const a = e.data()
+                const DATA = {
+                    userID: getIDUSEr(a.name),
+                    numberStatus: a.numberStatus,
+                    status: a.status,
+                    timestamp: a.timestamp,
+                    timestampTarea: a.timestampTarea,
+                    description: a.description,
+                    date: a.dates,
+                    dateAtual: a.dateAtual == null ? a.dates : a.dateAtual,
+                    title: a.title
+                }
+                console.log(index)
+                firestore().collection('comments').where('idPost', '==', a.id).get().then(res => {
+                    res.docs.forEach(e => {
+                        const b = e.data();
+                        const DATACOMMENT = {
+                            userID: getIDUSEr(b.nameUser),
+                            postID: index,
+                            color: b.color,
+                            comment: b.comment,
+                            date: b.date,
+                            numberStatus: b.numberStatus,
+                            solit: b.solit,
+                            status: b.status,
+                            statusText: b.statusText
+                        }
 
-        //                 // api.post('/comments/create', DATACOMMENT).then((e) => {
-        //                 //     // console.log('===================')
-        //                 //     console.log(e.data)
-        //                 //     // console.log('===================')
-        //                 // }).catch((ERRRRROOO) => console.log('ERRRRROOO COOMMEM', ERRRRROOO))
+                        // api.post('/comments/create', DATACOMMENT).then((e) => {
+                        //     // console.log('===================')
+                        //     console.log(e.data)
+                        //     // console.log('===================')
+                        // }).catch((ERRRRROOO) => console.log('ERRRRROOO COOMMEM', ERRRRROOO))
 
-        //             });
+                    });
 
 
-        //         })
-        //         //   api.post('/posts/create', DATA).then((e) => {
-        //         //         // console.log('===================')
-        //         //         // console.log(e)
-        //         //         // console.log('===================')
-        //         //     }).catch((ERRRRROOO) => console.log('ERRRRROOO', ERRRRROOO))
+                })
+                //   api.post('/posts/create', DATA).then((e) => {
+                //         // console.log('===================')
+                //         // console.log(e)
+                //         // console.log('===================')
+                //     }).catch((ERRRRROOO) => console.log('ERRRRROOO', ERRRRROOO))
 
-        //     })
-        // })
+            })
+        })
         messaging().subscribeToTopic('medical').then(() => {
             messaging().onMessage(async remoteMessage => {
                 //  console.log('A new FCM message arrived!', JSON.stringify(remoteMessage));
