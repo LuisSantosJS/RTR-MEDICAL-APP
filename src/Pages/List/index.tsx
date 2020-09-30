@@ -285,7 +285,9 @@ const List: React.FC = () => {
 
 
     function updateTarefa(number: number, item: LIST) {
-
+        if (Number(item.userID) !== Number(userID)) {
+            return Toast.showWithGravity('No tienes autorización para eliminar esta tarea', Toast.LONG, Toast.TOP)
+        }
         if (number == 2) {
             return api.post('/posts/status/update', {
                 postID: item.id,
@@ -386,7 +388,7 @@ const List: React.FC = () => {
             return false;
         }
         const splitArray = views.split(',');
-        console.log('splitArray', splitArray)
+       // console.log('splitArray', splitArray)
         const search = splitArray.indexOf(String(emailUser));
         // console.log('search', search)
         if (search >= 0) {
@@ -439,7 +441,7 @@ const List: React.FC = () => {
                                             { label: "F", value: "2", activeColor: 'green' },
 
                                         ]}
-                                        disabled={enabledStatesItems}
+                                        disabled={Number(item.userID) === Number(userID) ? false :  true}
                                         buttonColor={item.status}
                                         initial={Number(item.numberStatus)}
                                         onPress={(value: number) => updateTarefa(value, item)}
@@ -667,6 +669,10 @@ const List: React.FC = () => {
                     markedDates={mark}
                     horizontal={true}
                     pagingEnabled
+                    onDayPress={(e)=> {
+                        setSearchText(e.dateString);
+                        modalizeRef.current?.close();
+                    }}
                 />
             </Modalize>
 
@@ -721,7 +727,7 @@ const List: React.FC = () => {
                                         { label: "P", value: "1", activeColor: 'orange' },
                                         { label: "F", value: "2", activeColor: 'green' },
                                     ]}
-                                    disabled={true}
+                                    disabled={false}
                                     buttonColor={ItemView?.status}
                                     initial={Number(ItemView?.numberStatus)}
                                     onPress={() => { }}

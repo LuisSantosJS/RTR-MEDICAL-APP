@@ -88,9 +88,9 @@ const InfoTarea: React.FC = () => {
         api.post('/posts/users/view', {
             userEmail: String(emailUser),
             postID: Number(listUnique.id)
-        }).then(res=>{
-            if(res.data.message !== 'success'){
-              Toast.showWithGravity('Se produjo un error', Toast.LONG, Toast.TOP)
+        }).then(res => {
+            if (res.data.message !== 'success') {
+                // Toast.showWithGravity('Se produjo un error', Toast.LONG, Toast.TOP)
             }
         })
     }, [])
@@ -123,8 +123,10 @@ const InfoTarea: React.FC = () => {
 
         }
     }, [])
-    function updateTarefa(number: number) {
-
+    function updateTarefa(number: number, id: string) {
+        if (Number(id) !== Number(userID)) {
+            return Toast.showWithGravity('No tienes autorización para eliminar esta tarea', Toast.LONG, Toast.TOP)
+        }
 
         if (number == 2) {
             return api.post('/posts/status/update', {
@@ -181,7 +183,9 @@ const InfoTarea: React.FC = () => {
     }
 
     function updateSolit(number: number, item: LISTCOMMENTS) {
-
+        if (Number(item.userID) !== Number(userID)) {
+            return Toast.showWithGravity('No tienes autorización para eliminar esta tarea', Toast.LONG, Toast.TOP)
+        }
         if (number == 2) {
             return api.post('/comments/update', {
                 postID: listUnique.id,
@@ -298,6 +302,9 @@ const InfoTarea: React.FC = () => {
     }
 
     function confirmDeleteComment(item: LISTCOMMENTS) {
+        if (Number(item.userID) !== Number(userID)) {
+            return Toast.showWithGravity('No tienes autorización para eliminar!', Toast.LONG, Toast.TOP)
+        }
         setItemDelete(item);
         setVisibleDialog(true)
     }
@@ -320,7 +327,7 @@ const InfoTarea: React.FC = () => {
                                     </TouchableWithoutFeedback>
 
                                     <View style={styles.bodyContainerItem2}>
-                                        <Text numberOfLines={1} style={[styles.textEmail]}>@{item.nameUser} {item.email}</Text>
+                                        <Text numberOfLines={1} style={[styles.textEmail]}>{item.email}</Text>
                                         <TextInput
                                             value={`${item?.comment}`}
                                             multiline={true}
@@ -331,6 +338,7 @@ const InfoTarea: React.FC = () => {
 
                                     </View>
                                     <Animated.View style={[styles.viewOpcacityItem2]} >
+                                        <Text style={styles.textEmail}>{item.date}</Text>
 
                                         <SwitchSelector
                                             options={[
@@ -339,7 +347,7 @@ const InfoTarea: React.FC = () => {
                                                 { label: "F", value: "2", activeColor: 'green' },
 
                                             ]}
-
+                                            disabled={Number(item.userID) === Number(userID) ? false: true}
                                             buttonColor={item.status}
                                             initial={Number(item.numberStatus)}
                                             onPress={(value: number) => updateSolit(value, item)}
@@ -371,7 +379,7 @@ const InfoTarea: React.FC = () => {
                                 </TouchableWithoutFeedback>
 
                                 <View style={styles.bodyContainerItem3}>
-                                    <Text numberOfLines={1} style={[styles.textEmail]}>@{item.nameUser} {item.email}</Text>
+                                    <Text numberOfLines={1} style={[styles.textEmail]}>{item.email}</Text>
                                     <TextInput
                                         value={`${item?.comment}`}
                                         multiline={true}
@@ -379,6 +387,7 @@ const InfoTarea: React.FC = () => {
                                         textAlignVertical='top'
                                         scrollEnabled
                                         style={[styles.textDesc]} />
+                                    <Text style={styles.textEmail}>{item.date}</Text>
 
                                 </View>
 
@@ -452,10 +461,10 @@ const InfoTarea: React.FC = () => {
                                                     { label: "F", value: "2", activeColor: 'green' },
 
                                                 ]}
-                                                disabled
+                                                disabled={Number(listUnique.userID) === Number(userID) ? false: true}
                                                 buttonColor={String(listUnique?.status)}
                                                 initial={Number(listUnique?.numberStatus)}
-                                                onPress={(value: number) => updateTarefa(value)}
+                                                onPress={(value: number) => updateTarefa(value, listUnique.userID)}
                                             />
                                             <Text style={styles.textEmail}>{listUnique?.statusText}</Text>
                                         </Animated.View>
