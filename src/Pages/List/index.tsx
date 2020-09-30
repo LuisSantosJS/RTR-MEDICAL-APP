@@ -388,7 +388,7 @@ const List: React.FC = () => {
             return false;
         }
         const splitArray = views.split(',');
-       // console.log('splitArray', splitArray)
+        // console.log('splitArray', splitArray)
         const search = splitArray.indexOf(String(emailUser));
         // console.log('search', search)
         if (search >= 0) {
@@ -441,7 +441,7 @@ const List: React.FC = () => {
                                             { label: "F", value: "2", activeColor: 'green' },
 
                                         ]}
-                                        disabled={Number(item.userID) === Number(userID) ? false :  true}
+                                        disabled={Number(item.userID) === Number(userID) ? false : true}
                                         buttonColor={item.status}
                                         initial={Number(item.numberStatus)}
                                         onPress={(value: number) => updateTarefa(value, item)}
@@ -481,15 +481,14 @@ const List: React.FC = () => {
                             onChangeText={(e) => setSearchText(e)}
                         />
                     </View>
-
-                    <View style={styles.iconSearch}>
-                        {searchText.length === 0 ?
-                            <Image resizeMode={"contain"} style={{ height: '60%', width: '40%' }} source={require('../../assets/search.png')} /> :
-                            <TouchableWithoutFeedback onPress={() => setSearchText('')}>
+                    <TouchableWithoutFeedback onPress={() => setSearchText('')}>
+                        <View style={styles.iconSearch}>
+                            {searchText.length === 0 ?
+                                <Image resizeMode={"contain"} style={{ height: '60%', width: '40%' }} source={require('../../assets/search.png')} /> :
                                 <Image resizeMode={"contain"} style={{ height: '35%', width: '25%' }} source={require('../../assets/close.png')} />
-                            </TouchableWithoutFeedback>
-                        }
-                    </View>
+                            }
+                        </View>
+                    </TouchableWithoutFeedback>
                 </View>
 
             </View>
@@ -669,7 +668,7 @@ const List: React.FC = () => {
                     markedDates={mark}
                     horizontal={true}
                     pagingEnabled
-                    onDayPress={(e)=> {
+                    onDayPress={(e) => {
                         setSearchText(e.dateString);
                         modalizeRef.current?.close();
                     }}
