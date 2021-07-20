@@ -27,7 +27,7 @@
     "email-validator": "^2.0.4",
     "moment": "^2.27.0",
     "react": "16.11.0",
-    "react-native": "0.62.2",
+    "react-native": "0.62.3",
     "react-native-calendars": "^1.300.0",
     "react-native-datepicker": "^1.7.2",
     "react-native-dialog": "^5.6.0",
