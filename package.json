@@ -25,7 +25,7 @@
     "@types/socket.io-client": "^1.4.33",
     "axios": "^0.20.0",
     "email-validator": "^2.0.4",
-    "moment": "^2.27.0",
+    "moment": "^2.29.4",
     "react": "16.11.0",
     "react-native": "0.62.2",
     "react-native-calendars": "^1.300.0",
